@@ -1,0 +1,621 @@
+{% extends '../base.html' %}
+
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block pagetitle %}Alumnos{% endblock %}
+
+{% block content %}
+    <div class="d-sm-flex align-items-center justify-content-between mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Asistencias</h1>
+    	<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#StudentRegisterModal"><i
+   	 	class="fas fa-user fa-sm text-white-50"></i>&nbspRegistrar Alumnos</a>
+
+    	<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#InscribirCursoModal"><i
+   	 	class="fas fa-user fa-sm text-white-50"></i>&nbspInscribir curso</a>
+
+    </div>
+	<div class="card shadow mb-4">
+        <div class="card-header py-3">
+			<h6 class="m-0 font-weight-bold text-primary">Asistencia {% now "d" %} {% now "M" %}, {% now "D" %}</h6>
+		</div>
+		<div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Cédula</th>
+                            <th>Nombres</th>
+                            <th>Apellidos</th>
+                            <th>Asistio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="StudentTableBody">
+                    	{% for student in students %}
+                    		<tr id="{{ student.id }}">
+                    			<td>{{ student.id }}</td>
+                    			<td>{{ student.identification_number }}</td>
+                    			<td>{{ student.names }}</td>
+                    			<td>{{ student.surnames }}</td>
+                    			<td><input id="checkbox-{{ student.id }}" type="checkbox" onclick="updateStudentAsistencia(this.id);" checked="{{ student.asistio }}" value="{{ student.asistio }}"></td>
+                    			<td id="checkbox-label-{{ student.id }}">
+                    				{% if student.asistio == "true" %}
+                    					Presente
+                    				{% else %}
+                    					No presente
+                    				{% endif %}
+                    			</td>
+                    		</tr>
+                    	{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+		</div>
+	</div>
+
+    <!-- Registrar alumno Modal-->
+    <div class="modal fade" id="StudentRegisterModal" tabindex="-1" role="dialog" aria-labelledby="StudentRegisterModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Registrar alumno</h5>
+                    <button id="StudentCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form class="user">
+                        <div class="form-group">
+                            <input type="text" class="form-control form-control-user" id="identification_number" name="identification_number"
+                                placeholder="Ingrese la cédula de identidad...">
+                        </div>
+                        <div class="form-group">
+                            <input type="text" class="form-control form-control-user" id="names" name="names" placeholder="Ingrese el nombre...">
+                        </div>
+                        <div>
+                            <input type="text" class="form-control form-control-user" id="surnames" name="surnames" placeholder="Ingrese el apellido">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <a class="btn btn-primary btn-user btn-block" id="StudentRegisterButton" href="#">Guardar</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Inscribir curso-->
+    <div class="modal fade" id="InscribirCursoModal" tabindex="-1" role="dialog" aria-labelledby="StudentRegisterModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog " role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="exampleModalLabel">Inscribir curso</h5>
+                    <button id="StudentCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+					<form class="user" id="openingCourseRegistration">
+				        <nav>
+				            <div class="nav nav-pills nav-fill" id="nav-tab" role="tablist">
+				              	<a class="nav-link active" id="step1-tab">Curso</a>
+				              	<a class="nav-link" id="step2-tab">Profesor</a>
+				              	<a class="nav-link" id="step3-tab" data-toggle="tab" href="#step3">Finalizar</a>
+				            </div>
+				        <br>
+				        </nav>
+						<div class="" id="step1">
+							<div id="course_search_section" class="collapse show">
+	                            <div class="form-group">
+						            <label class="">Buscar un curso</label>
+						            <!-- Multiselect dropdown -->
+						            <select style="border: 1px solid #000;" data-live-search="true" title="Busca un curso..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" name="course_name_search" id="course_name_search">
+						            {% for course in courses %}
+						            	<option value="{{ course.id }}" data-tokens="{{ course.description }}">{{ course.name }}</option>
+						            {% endfor %}
+						            </select>
+	                            </div>
+                        	</div>
+                            <div id="course_register_section" class="collapse">
+                            	<div class="form-group">
+						            <label class="">¿Como se llama el curso?</label>
+                            		<input type="text" placeholder="Nombre del curso" class="form-control form-control-user" id="course_name" name="course_name">
+                            	</div>
+                            	<div class="form-group">
+						            <label class="">¿En que categorias se encuentra? (Maximo 3)</label>
+						            <!-- Multiselect dropdown -->
+						            <select style="border: 1px solid #000;" data-live-search="true" data-max-options="3" multiple title="Selecciona las categorias..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" name="categories" id="categories">
+						            {% for category in categories %}
+						            	<option data-tokens="" value="{{ category.id }}">{{ category.name }}</option>
+						            {% endfor %}
+						            </select>
+                            	</div>
+
+	                            <div class="form-group">
+							        <label class="">Una breve descripción del curso</label>
+							        <textarea class="form-control" id="course_description" name="course_description"></textarea>
+	                            </div>
+                            </div>
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox small">
+                                    <input type="checkbox" class="custom-control-input" id="course_register_checkbox" name="course_register_checkbox">
+                                    <label class="custom-control-label" for="course_register_checkbox">Curso no esta registrado
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group row">
+                            	<div class="col-md-6 col-lg-6">
+                            		<label>Fecha de inicio</label>
+                            		<input type="date" class="form-control form-control-user" id="date_start" name="date_start">	
+                            	</div>
+								<div class="col-md-6 col-lg-6">
+                            		<label>Fecha finalización</label>
+                            		<input type="date" class="form-control form-control-user" id="date_end" name="date_end">
+                            	</div>
+                            </div>
+						</div>
+						<div class="" id="step2">
+							<div id="teacher_search_section" class="collapse show">
+	                            <div class="form-group">
+						            <label class="">Buscar un profesor para el curso</label>
+						            <!-- Multiselect dropdown -->
+						            <select style="border: 1px solid #000;" data-live-search="true" title="Busca el profesor por el nombre..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" id="teacher-name-search" name="teacher_name_search">
+						            {% for teacher in teachers %}
+						                <option data-tokens="{{ teacher.identification_number }}" value="{{ teacher.id }}">{{ teacher.full_name }}</option>			            	
+						            {% endfor %}
+						            </select>
+	                            </div>
+                        	</div>
+                        	<div id="teacher_register_section" class="collapse">
+                            	<div class="form-group">
+						            <label class="">Número de cédula</label>
+                            		<input type="text" placeholder="Numero de cedula" class="form-control form-control-user" id="teacher_identification_number" name="teacher_identification_number">
+                            	</div>
+                            	<div class="form-group row">
+                                    <div class="col-sm-6 mb-3 mb-sm-0">
+                                    	<label>Nombres</label>
+                                        <input type="text" class="form-control form-control-user"
+                                            placeholder="Nombre(s)" name="teacher_names" id="teacher_names">
+                                    </div>
+                                    <div class="col-sm-6">
+                                    	<label>Apellidos</label>
+                                        <input type="text" class="form-control form-control-user"
+                                            placeholder="Apellido(s)" name="teacher_surnames" id="teacher_surnames">
+                                    </div>
+                            	</div>
+                            	<div class="form-group">
+						            <label class="">Correo electrónico</label>
+                            		<input type="text" placeholder="Correo electronico" class="form-control form-control-user" id="teacher_email" name="teacher_email">
+                            	</div>
+                            	<div class="form-group">
+						            <label class="">Teléfono celular</label>
+                            		<input type="text" placeholder="Teléfono" class="form-control form-control-user" id="teacher_phone" name="teacher_phone">
+                            	</div>
+                        	</div>
+                            <div class="form-group">
+                                <div class="custom-control custom-checkbox small">
+                                    <input type="checkbox" class="custom-control-input" id="teacher_register_checkbox" name="teacher_register_checkbox">
+                                    <label class="custom-control-label" for="teacher_register_checkbox">Profesor no registrado
+                                    </label>
+                                </div>
+                            </div>						
+						</div>
+						<div class="" id="step3">
+							<div class="card">
+								<div class="card-header">
+									<h6>Casi estamos listos, verifica la información suministrada</h6>
+								</div>
+								<div class="card-body">
+									<div class="form-group">
+										<label class="">Curso de </label>
+										<input type="text" class="form-control form-control-user" id="course_confirm" disabled="">
+									</div>
+									<div class="form-group">
+										<label>Dictado por: </label>
+										<input type="text" class="form-control form-control-user" id="teacher_confirm" disabled="">
+									</div>
+									<div class="form-group row">
+										<div class="col-sm-6 col-md-6 mb-sm-0">
+											<label>Comienza</label>
+											<input type="text" class="form-control form-control-user" id="start_date_confirm" disabled="">
+										</div>
+										<div class="col-sm-6 col-md-6 mb-sm-0">
+											<label>Termina</label>
+											<input type="text" class="form-control form-control-user" id="end_date_confirm" disabled="">
+										</div>
+									</div>	
+								</div>
+							</div>
+						</div>
+						<hr>
+				        <div class="row justify-content-between">
+				        	<div class="col-auto">
+				        		<button type="button" id="prevButton" class="btn btn-secondary" data-enchanter="previous">Anterior</button>
+				        	</div>
+				            <div class="col-auto">
+				              	<button type="button" class="btn btn-primary" data-enchanter="next" id="nextButton">Siguiente</button>
+				              	<button type="submit" class="btn btn-primary" data-enchanter="finish" id="sendButton">Completar</button>
+				            </div>
+				        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    <input type="hidden" id="channel" value="{{ request.user.username }}">
+
+{% endblock %}
+
+{% block additionaljs %}
+{% csrf_token %}
+<script type="text/javascript">
+	$(function () {
+	    $('.selectpicker').selectpicker();
+	});
+
+	function getCookie(name) {
+	    let cookieValue = null;
+	    if (document.cookie && document.cookie !== '') {
+	        const cookies = document.cookie.split(';');
+	        for (let i = 0; i < cookies.length; i++) {
+	            const cookie = cookies[i].trim();
+	            // Does this cookie string begin with the name we want?
+	            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+	                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+	                break;
+	            }
+	        }
+	    }
+	    return cookieValue;
+	}
+
+	$(document).ready(function(e) {
+		/* Esto es para el formulario con multiples pasos */
+		var divSteps = [$('#step1'), $('#step2'), $('#step3')];
+		var divStepTabs = [$('#step1-tab'), $('#step2-tab'), $('#step3-tab')];
+		var prevButton = $('#prevButton');
+		var nextButton = $('#nextButton');
+		var sendButton = $('#sendButton');
+
+		// Ocultar el boton de envio del formulario
+		sendButton.fadeOut(1);
+
+		var currStep = 1;
+
+		for (let i=1; i < divSteps.length; i++) {
+			divSteps[i].fadeOut(1);
+		}
+
+		prevButton.click(function(e) {
+			if (currStep > 1) {
+				currStep -= 1;
+				for(let i=0; i < divSteps.length; i++) {
+					if ((currStep) == (i + 1)) {
+						divSteps[i].fadeIn(1);
+						divStepTabs[i].addClass('active');
+					} else {
+						divSteps[i].fadeOut(1);
+						divStepTabs[i].removeClass('active');
+					}
+				}
+			}
+			if (currStep < divSteps.length) {
+				sendButton.fadeOut(1);
+				nextButton.fadeIn(100);
+			}
+		});
+
+		nextButton.click(function(e) {
+			if (currStep >= 1 && currStep < 3) {
+				currStep += 1;
+				for (let i=0; i < divSteps.length; i++) {
+					if ((i + 1) == currStep) {
+						divSteps[i].fadeIn(1);
+						divStepTabs[i].addClass('active');
+					} else {
+						divSteps[i].fadeOut(1);
+						divStepTabs[i].removeClass('active');
+					}
+				}
+			}
+			if (currStep == divSteps.length) {
+				nextButton.fadeOut(1);
+				sendButton.fadeIn(100);
+
+				// Mostrar la información de apertura de curso
+				let courseIsNotRegistered = $('#course_register_checkbox').is(':checked');
+				let teacherIsNotRegistered = $('#teacher_register_checkbox').is(':checked');
+
+				if (courseIsNotRegistered) {
+					let courseName = $('#course_name').val();
+					// Colocar el nombre del curso
+					$('#course_confirm').val(courseName);
+				} else {
+					let courseId = $('#course_name_search').val();
+					const csrftoken = getCookie('csrftoken');
+
+					fetch("courses/" + courseId, {
+						method: 'GET',
+						headers: { "X-CSRFToken": csrftoken },
+					})
+
+					.then(function(response) {
+						if (response.ok) {
+							return response.json()
+						} else {
+							throw "Respuesta no valida por parte del servidor"
+						}
+					})
+
+					.then (function(response) {
+						let courseName = response.data.name;
+						$('#course_confirm').val(courseName);
+					})
+
+					.catch(function(error) {
+						$('#course_confirm').val(courseId);
+					})
+				}
+
+				if (teacherIsNotRegistered) {
+					const teacherNames = $('#teacher_names').val();
+					const teacherSurnames = $('#teacher_surnames').val();
+					const full_name = teacherNames + ' ' + teacherSurnames;
+					$('#teacher_confirm').val(full_name);
+
+				} else {
+					let teacherId = $('#teacher_name_search').val();
+					const csrftoken = getCookie('csrftoken');
+
+					fetch("teachers/" + teacherId, {
+						method: 'GET',
+						headers: { "X-CSRFToken": csrftoken },
+					})
+
+					.then(function(response) {
+						if (response.ok) {
+							return response.json()
+						} else {
+							throw "Respuesta no valida por parte del servidor"
+						}
+					})
+
+					.then (function(response) {
+						const teacherName = response.data.names;
+						const teacherSurnames = response.data.surnames;
+						const full_name = teacherNames + ' ' + teacherSurnames;
+
+						$('#teacher_confirm').val(full_name);
+					})
+
+					.catch(function(error) {
+						$('#teacher_confirm').val(teacherId);
+					})
+				}
+
+				// Colocar la fecha de inicio y fecha de finalizacion del curso
+				let startDate = $('#date_start').val();
+				let endDate = $('#date_end').val();
+
+				$('#start_date_confirm').val(startDate);
+				$('#end_date_confirm').val(endDate);
+			}
+		});
+		/* Final de bloque */
+
+		/* Enviar formulario de inscripción de curso*/
+		sendButton.click(function(e) {
+			e.preventDefault();
+
+			let csrftoken = getCookie('csrftoken');
+			let categories = $('#categories');
+			let form = new FormData(document.getElementById('openingCourseRegistration'));
+			
+			form.append("categories", categories.val());
+			form.delete("course_confirm");
+			form.delete("teacher_confirm");
+			form.delete("start_date_confirm");
+			form.delete("end_date_confirm");
+
+			fetch("{% url 'courses:opening' %}", {
+				method: 'POST',
+				body: form,
+				headers: { "X-CSRFToken": csrftoken },
+			})
+
+			.then(function(response) {
+				if (response.ok) {
+					return response.json();
+				} else {
+					return response.json();
+				}
+			})
+
+			.then(function(response) {
+				if (response.status == 201) {
+					alert(response.message);
+					
+				} else if (response.status == 400) {
+					
+				} else {
+					alert("Error");
+					alert(response.message);
+				}
+			})
+		});
+
+		/* Formularios para buscar y registrar curso */
+
+		let courseRegisterChecked = $('#course_register_checkbox').is(':checked');
+		let courseSearchSection = $('#course_search_section');
+		let courseRegisterSection = $('#course_register_section');
+
+		if (courseRegisterChecked) {
+			courseSearchSection.fadeOut(1);
+			courseRegisterSection.fadeIn(1000);
+		}
+
+		$('#course_register_checkbox').click(function(e) {
+			let courseRegisterChecked = $('#course_register_checkbox').is(':checked');
+			
+			if (courseRegisterChecked) {
+				courseSearchSection.fadeOut(1);
+				courseRegisterSection.fadeIn(100);
+
+			} else {
+				courseRegisterSection.fadeOut(1);				
+				courseSearchSection.fadeIn(100);
+			}
+		})
+		/* Final de bloque */
+
+		/* Formularios para buscar y registrar profesor */
+		let teacherRegisterChecked = $('#teacher_register_checkbox').is(':checked');
+		let teacherSearchSection = $('#teacher_search_section');
+		let teacherRegisterSection = $('#teacher_register_section');
+
+		if (teacherRegisterChecked) {
+			teacherSearchSection.fadeOut(1);
+			teacherRegisterSection.fadeIn(100);
+		}
+
+		$('#teacher_register_checkbox').click(function(e) {
+			let teacherRegisterChecked = $('#teacher_register_checkbox').is(':checked');
+
+			if (teacherRegisterChecked) {
+				teacherSearchSection.fadeOut(1);
+				teacherRegisterSection.fadeIn(100);
+			} else {
+				teacherRegisterSection.fadeOut(1);
+				teacherSearchSection.fadeIn(100);
+			}
+		});
+	});
+
+	const channel = document.getElementById("channel").value;
+	const socket = new WebSocket(
+		'ws://'
+		+ window.location.host
+		+ '/ws/app/'
+	);
+
+	console.log("WS main: ", socket);
+
+	socket.onopen = function(e) {
+		socket.send(JSON.stringify({
+			'msg_type': 'SUBSCRIBE',
+			'channel': channel,
+		}));
+	}
+
+	socket.onmessage = function(e) {
+		const msg = JSON.parse(e.data);
+		if (msg.msg_type == "REQUEST") {
+			if (msg.resource == "STUDENT") {
+				if (msg.action == "CREATE") {
+					if (msg.status == 201) {
+						appendStudentToTable(msg.data)
+						document.getElementById("StudentCloseModalButton").click();
+						document.querySelector('#identification_number').value = "";
+						document.querySelector('#names').value = "";
+						document.querySelector('#surnames').value = "";
+					}
+				}
+			}
+
+			else if (msg.resource == "ASISTENCIA") {
+				if (msg.action == "CREATE") {
+					if (msg.status == 200) {
+						updateStudentCheckBox(msg.data);
+					}
+				}
+			}
+		}
+	}
+
+	socket.onclose = function(e) {
+		console.log("WS App ha sido cerrado");
+	}
+	
+	document.querySelector('#StudentRegisterButton').onclick = function(e) {
+		e.preventDefault();
+
+		let identification = document.querySelector('#identification_number').value;
+		let names = document.querySelector('#names').value;
+		let surnames = document.querySelector('#surnames').value;
+
+		const message = {
+			'identification_number': identification,
+			'names': names,
+			'surnames': surnames
+		};
+
+		if (identification.length > 7 && names.length >= 3 && surnames.length >= 3) {
+			socket.send(JSON.stringify({
+				'msg_type': 'REQUEST',
+				'resource': 'STUDENT',
+				'action': 'CREATE',
+				'data': message
+			}));
+
+		} else {
+			alert("Solicitud invalida (Ha ingresado algun dato no valido).");
+		}
+	}
+
+	var appendStudentToTable = function(student) {
+		const tableBody = document.querySelector('#StudentTableBody');
+		let studentElem = "";
+
+		studentElem += "<tr id='"+student.id+"'>";
+		studentElem += "<td>"+student.id+"</td>";
+		studentElem += "<td>"+student.identification_number+"</td>";
+		studentElem += "<td>"+student.names+"</td>";
+		studentElem += "<td>"+student.surnames+"</td>";
+		studentElem += "<td><input id='checkbox-"+student.id+"' type='checkbox' checked='false' onclick='updateStudentAsistencia(this.id);'></td>";
+
+		studentElem += "<td id='checkbox-label-"+student.id+"'>No presente</td>";
+		studentElem += "</tr>";
+
+		tableBody.innerHTML += studentElem;
+	}
+
+	var updateStudentAsistencia = function(elemId) {
+		let checkboxInput = document.getElementById(elemId);
+		let checkboxInputId = parseInt(elemId.split('-')[1]);
+
+		socket.send(JSON.stringify({
+			'msg_type': 'REQUEST',
+			'resource': 'ASISTENCIA',
+			'action': 'CREATE',
+			'data': {
+				'checked': checkboxInput.checked,
+				'id': checkboxInputId,
+			}
+		}));
+	}
+
+	var updateStudentCheckBox = function(data) {
+		const checkboxId = "checkbox-" + data.id;
+		const checkboxInput = document.getElementById(checkboxId);
+		const checkboxInputLabel = document.getElementById("checkbox-label-" + data.id);
+
+		if (data.checked)
+			checkboxInputLabel.textContent = "Presente";
+		else
+			checkboxInputLabel.textContent = "No presente";
+
+		checkboxInput.checked = data.checked;
+	}
+
+	var updateCheckbox = function(obj) {
+		const checkboxInput = document.getElementById(obj.id);
+		checkboxInput.checked = obj.checked;
+	}
+
+</script>
+{% endblock %}
