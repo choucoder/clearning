@@ -8,12 +8,12 @@
 
 {% block content %}
     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Asistencias</h1>
-    	<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#StudentRegisterModal"><i
-   	 	class="fas fa-user fa-sm text-white-50"></i>&nbspRegistrar Alumnos</a>
+        <h1 class="h3 mb-0 text-gray-800">Cursos inscritos</h1>
 
+        {% if request.user.user_type == 1 or request.user.user_type == 2 %}
     	<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#InscribirCursoModal"><i
    	 	class="fas fa-user fa-sm text-white-50"></i>&nbspInscribir curso</a>
+   	 	{% endif %}
 
     </div>
 	<div class="card shadow mb-4">
@@ -25,27 +25,30 @@
                 <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
                     <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Cédula</th>
-                            <th>Nombres</th>
-                            <th>Apellidos</th>
-                            <th>Asistio</th>
+                            <th>Curso</th>
+                            {% if request.user.user_type == 2 %}
+                            	<th>Profesor</th>
+                            {% endif %}
+                            <th>Inicio</th>
+                            <th>Termina</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
                         </tr>
                     </thead>
                     <tbody id="StudentTableBody">
-                    	{% for student in students %}
-                    		<tr id="{{ student.id }}">
-                    			<td>{{ student.id }}</td>
-                    			<td>{{ student.identification_number }}</td>
-                    			<td>{{ student.names }}</td>
-                    			<td>{{ student.surnames }}</td>
-                    			<td><input id="checkbox-{{ student.id }}" type="checkbox" onclick="updateStudentAsistencia(this.id);" checked="{{ student.asistio }}" value="{{ student.asistio }}"></td>
-                    			<td id="checkbox-label-{{ student.id }}">
-                    				{% if student.asistio == "true" %}
-                    					Presente
-                    				{% else %}
-                    					No presente
-                    				{% endif %}
+                    	{% for course in opened_courses %}
+                    		<tr id="{{ course.id }}">
+                    			<td>{{ course.course.name }}</td>
+                    			{% if request.user.user_type == 2 %}
+                    				<td>{{ course.teacher.full_name }}</td>
+                    			{% endif %}
+                    			<td>{{ course.start_date }}</td>
+                    			<td>{{ course.end_date }}</td>
+                    			<td>{{ course.price }}</td>
+                    			<td>{{ course.get_status_display }}</td>
+                    			<td>
+                    				<a href="{% url 'courses:students' course.id %}" class="info">Matricula</a>
                     			</td>
                     		</tr>
                     	{% endfor %}
@@ -55,46 +58,14 @@
 		</div>
 	</div>
 
-    <!-- Registrar alumno Modal-->
-    <div class="modal fade" id="StudentRegisterModal" tabindex="-1" role="dialog" aria-labelledby="StudentRegisterModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Registrar alumno</h5>
-                    <button id="StudentCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <form class="user">
-                        <div class="form-group">
-                            <input type="text" class="form-control form-control-user" id="identification_number" name="identification_number"
-                                placeholder="Ingrese la cédula de identidad...">
-                        </div>
-                        <div class="form-group">
-                            <input type="text" class="form-control form-control-user" id="names" name="names" placeholder="Ingrese el nombre...">
-                        </div>
-                        <div>
-                            <input type="text" class="form-control form-control-user" id="surnames" name="surnames" placeholder="Ingrese el apellido">
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <a class="btn btn-primary btn-user btn-block" id="StudentRegisterButton" href="#">Guardar</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Inscribir curso-->
-    <div class="modal fade" id="InscribirCursoModal" tabindex="-1" role="dialog" aria-labelledby="StudentRegisterModalLabel"
+    <div class="modal fade" id="InscribirCursoModal" tabindex="-1" role="dialog" aria-labelledby="InscribirCursoModalLabel"
         aria-hidden="true">
         <div class="modal-dialog " role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="exampleModalLabel">Inscribir curso</h5>
-                    <button id="StudentCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <button id="InscribirCursoCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
@@ -134,7 +105,6 @@
 						            {% endfor %}
 						            </select>
                             	</div>
-
 	                            <div class="form-group">
 							        <label class="">Una breve descripción del curso</label>
 							        <textarea class="form-control" id="course_description" name="course_description"></textarea>
@@ -147,6 +117,10 @@
                                     </label>
                                 </div>
                             </div>
+                        	<div class="form-group">
+					            <label class="">Costo</label>
+                        		<input type="number" placeholder="Costo" class="form-control form-control-user" id="course_price" name="course_price">
+                        	</div>
                             <div class="form-group row">
                             	<div class="col-md-6 col-lg-6">
                             		<label>Fecha de inicio</label>
@@ -157,13 +131,14 @@
                             		<input type="date" class="form-control form-control-user" id="date_end" name="date_end">
                             	</div>
                             </div>
+                            <small id="step1-debug" class="text-danger"></small>
 						</div>
 						<div class="" id="step2">
 							<div id="teacher_search_section" class="collapse show">
 	                            <div class="form-group">
 						            <label class="">Buscar un profesor para el curso</label>
 						            <!-- Multiselect dropdown -->
-						            <select style="border: 1px solid #000;" data-live-search="true" title="Busca el profesor por el nombre..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" id="teacher-name-search" name="teacher_name_search">
+						            <select style="border: 1px solid #000;" data-live-search="true" title="Busca el profesor por el nombre..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" id="teacher_name_search" name="teacher_name_search">
 						            {% for teacher in teachers %}
 						                <option data-tokens="{{ teacher.identification_number }}" value="{{ teacher.id }}">{{ teacher.full_name }}</option>			            	
 						            {% endfor %}
@@ -202,7 +177,8 @@
                                     <label class="custom-control-label" for="teacher_register_checkbox">Profesor no registrado
                                     </label>
                                 </div>
-                            </div>						
+                            </div>
+                            <small id="step2-debug" class="text-danger"></small>						
 						</div>
 						<div class="" id="step3">
 							<div class="card">
@@ -385,7 +361,7 @@
 					})
 
 					.then (function(response) {
-						const teacherName = response.data.names;
+						const teacherNames = response.data.names;
 						const teacherSurnames = response.data.surnames;
 						const full_name = teacherNames + ' ' + teacherSurnames;
 
@@ -437,12 +413,28 @@
 
 			.then(function(response) {
 				if (response.status == 201) {
+
+    				$('#InscribirCursoCloseModalButton').click();
+    				$('#step1-debug').html('');
+					$('#step2-debug').html('');
+
+					// Limpiar todos los datos    				
+    				prevButton.click()
+    				prevButton.click()
+
 					alert(response.message);
-					
+
+
 				} else if (response.status == 400) {
+					const step = response.debug;
+					let i = 3 - step;
 					
+					while (i >= 1) {
+						prevButton.click();
+						i -= 1;
+					}
+					$('#step'+step+'-debug').html(response.message);
 				} else {
-					alert("Error");
 					alert(response.message);
 				}
 			})
@@ -541,32 +533,6 @@
 		console.log("WS App ha sido cerrado");
 	}
 	
-	document.querySelector('#StudentRegisterButton').onclick = function(e) {
-		e.preventDefault();
-
-		let identification = document.querySelector('#identification_number').value;
-		let names = document.querySelector('#names').value;
-		let surnames = document.querySelector('#surnames').value;
-
-		const message = {
-			'identification_number': identification,
-			'names': names,
-			'surnames': surnames
-		};
-
-		if (identification.length > 7 && names.length >= 3 && surnames.length >= 3) {
-			socket.send(JSON.stringify({
-				'msg_type': 'REQUEST',
-				'resource': 'STUDENT',
-				'action': 'CREATE',
-				'data': message
-			}));
-
-		} else {
-			alert("Solicitud invalida (Ha ingresado algun dato no valido).");
-		}
-	}
-
 	var appendStudentToTable = function(student) {
 		const tableBody = document.querySelector('#StudentTableBody');
 		let studentElem = "";

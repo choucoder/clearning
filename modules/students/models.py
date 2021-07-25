@@ -21,7 +21,9 @@ class Student(BaseModel):
 			'id': str(self.id),
 			'identification_number': self.identification_number,
 			'names': self.names,
-			'surnames': self.surnames
+			'surnames': self.surnames,
+			'email': self.email,
+			'phone': self.phone,
 		}
 
 	def __str__(self):
@@ -30,6 +32,12 @@ class Student(BaseModel):
 			names=self.names,
 			surnames=self.surnames
 		)
+
+	def full_name(self):
+		name = self.names.split()[0]
+		surname = self.surnames.split()[0]
+
+		return f"{name} {surname}"
 
 	def asistio(self):
 		now = datetime.now()

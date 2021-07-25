@@ -21,11 +21,11 @@ class BaseModel(models.Model):
 		as_dict = {}
 
 		for attr, value in self.__dict__.items():
-			if type(value) in (int, float, bool, str):
+			if type(value) in (int, float, bool, str, ):
 				as_dict[attr] = value
-			elif type(value) in (BaseModel):
+			elif type(value) in (BaseModel, ):
 				as_dict[attr] = value.to_json()
-			elif type(value) in (models.DateTimeField, models.DateField):
+			elif type(value) in (models.DateTimeField, models.DateField, ):
 				as_dict[attr] = str(value)
 			else:
 				# Convert to str or None

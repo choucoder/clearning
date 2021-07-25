@@ -1,0 +1,250 @@
+{% extends '../base.html' %}
+
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block pagetitle %}Alumnos{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h5 class="h5 mb-0 text-gray-800">Estudiantes matriculados en el curso  "{{ course.course.name }}"</h5>
+
+    {% if request.user.user_type == 1 or request.user.user_type == 2 or request.user.user_type == 3%}
+	<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#InscribirAlumnoModal"><i
+	 	class="fas fa-user fa-sm text-white-50"></i>&nbspInscribir alumno</a>
+	 	{% endif %}
+
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+		<h6 class="m-0 font-weight-bold text-primary">Asistencia {% now "d" %} {% now "M" %}, {% now "D" %}</h6>
+	</div>
+	<div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                <thead>
+                    <tr>
+                        <th>Cedula</th>
+                        <th>Nombre</th>
+                        <th>Apellido</th>
+                        <th>Correo</th>
+                        <th>Telefono</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="StudentTableBody">
+                	{% for student in data %}
+                		<tr id="table-row-{{ student.id }}">
+                			<td>{{ student.identification_number }}</td>
+                			<td>{{ student.names }}</td>
+                			<td>{{ student.surnames }}</td>
+                			<td>{{ student.email }}</td>
+                			<td>{{ student.phone }}</td>
+                		</tr>
+                	{% endfor %}
+                </tbody>
+            </table>
+        </div>
+	</div>
+</div>
+
+<!-- Inscribir alumno en un curso-->
+<div class="modal fade" id="InscribirAlumnoModal" tabindex="-1" role="dialog" aria-labelledby="InscribirCursoModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Inscribir alumno</h5>
+                <button id="InscribirAlumnoCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+				<form class="user" id="enrollmentForm">
+			        <nav>
+			            <div class="nav nav-pills nav-fill" id="nav-tab" role="tablist">
+			              	<a class="nav-link" id="step2-tab">Alumno</a>
+			            </div>
+			        <br>
+			        </nav>
+					<div class="" id="step1">
+						<div id="student_search_section" class="collapse show">
+                            <div class="form-group">
+					            <label class="">Buscar un alumno para inscribirlo</label>
+					            <!-- Multiselect dropdown -->
+					            <select style="border: 1px solid #000;" data-live-search="true" title="Busca el alumno por el nombre..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" id="student_name_search" name="student_name_search">
+					            
+					            {% for student in students %}
+					                <option data-tokens="{{ student.identification_number }}" value="{{ student.id }}">{{ student.full_name }}</option>			            	
+					            {% endfor %}
+					            </select>
+                            </div>
+                    	</div>
+                    	<div id="student_register_section" class="collapse">
+                        	<div class="form-group">
+					            <label class="">Número de cédula</label>
+                        		<input type="text" placeholder="Numero de cedula" class="form-control form-control-user" id="student_identification_number" name="student_identification_number">
+                        	</div>
+                        	<div class="form-group row">
+                                <div class="col-sm-6 mb-3 mb-sm-0">
+                                	<label>Nombres</label>
+                                    <input type="text" class="form-control form-control-user"
+                                        placeholder="Nombre(s)" name="student_names" id="student_names">
+                                </div>
+                                <div class="col-sm-6">
+                                	<label>Apellidos</label>
+                                    <input type="text" class="form-control form-control-user"
+                                        placeholder="Apellido(s)" name="student_surnames" id="student_surnames">
+                                </div>
+                        	</div>
+                        	<div class="form-group">
+					            <label class="">Correo electrónico</label>
+                        		<input type="text" placeholder="Correo electronico" class="form-control form-control-user" id="student_email" name="student_email">
+                        	</div>
+                        	<div class="form-group">
+					            <label class="">Teléfono celular</label>
+                        		<input type="text" placeholder="Teléfono" class="form-control form-control-user" id="student_phone" name="student_phone">
+                        	</div>
+                    	</div>
+                        <div class="form-group">
+                            <div class="custom-control custom-checkbox small">
+                                <input type="checkbox" class="custom-control-input" id="student_register_checkbox" name="student_register_checkbox">
+                                <label class="custom-control-label" for="student_register_checkbox">Alumno no registrado
+                                </label>
+                            </div>
+                        </div>
+                    	<div class="form-group">
+				            <label class="">Pago de inscripción</label>
+                    		<input type="number" placeholder="Pago" class="form-control form-control-user" id="student_payment" name="student_payment">
+                    	</div>
+
+                        <small id="enrollment-debug" class="text-danger"></small>				
+					</div>
+					<hr>
+			        <div class="row justify-content-between">
+			        	<div class="col-auto">
+			        		<button type="button" id="prevButton" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Cancelar</button>
+			        	</div>
+			            <div class="col-auto">
+			              	<button type="submit" class="btn btn-primary" data-enchanter="finish" id="submitForm">Completar</button>
+			            </div>
+			        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block additionaljs %}
+{% csrf_token %}
+<script type="text/javascript" charset="utf-8" async defer>
+
+	function getCookie(name) {
+	    let cookieValue = null;
+	    if (document.cookie && document.cookie !== '') {
+	        const cookies = document.cookie.split(';');
+	        for (let i = 0; i < cookies.length; i++) {
+	            const cookie = cookies[i].trim();
+	            // Does this cookie string begin with the name we want?
+	            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+	                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+	                break;
+	            }
+	        }
+	    }
+	    return cookieValue;
+	}
+
+	var i = 0;
+
+	setInterval(function() {
+		$('#student_name_search').append($('<option>',
+		 {
+		    value: "hola",
+		    text : "Hola mundo",
+		}));
+		$('.selectpicker').selectpicker('refresh');
+		console.log("Iteracion: " + i);
+		i += 1;
+	}, 100000)
+
+	$(document).ready(function(e) {
+		/* Formularios para buscar y registrar estudiante en un curso */
+		let studentRegisterChecked = $('#student_register_checkbox').is(':checked');
+		let studentSearchSection = $('#student_search_section');
+		let studentRegisterSection = $('#student_register_section');
+
+		if (studentRegisterChecked) {
+			studentSearchSection.fadeOut(1);
+			studentRegisterSection.fadeIn(100);
+		}
+
+		$('#student_register_checkbox').click(function(e) {
+			let studentRegisterChecked = $('#student_register_checkbox').is(':checked');
+
+			if (studentRegisterChecked) {
+				studentSearchSection.fadeOut(1);
+				studentRegisterSection.fadeIn(100);
+			} else {
+				studentRegisterSection.fadeOut(1);
+				studentSearchSection.fadeIn(100);
+			}
+		});
+		// Fin de bloque
+
+		var enrollmentSubmitButton = $('#submitForm');
+		var enrollmentDebug = $('#enrollment-debug');
+		enrollmentDebug.html('');
+
+		enrollmentSubmitButton.click(function(e) {
+			e.preventDefault();
+
+			const csrftoken = getCookie('csrftoken');
+			let registerForm = $('#enrollmentForm');
+			let form = new FormData(document.getElementById('enrollmentForm'));
+			let registerStudentChecked = $('#student_register_checkbox').is(':checked');
+
+			if (registerStudentChecked) {
+				enrollmentDebug.html('Estudiante no registrado')
+				isValid = true;
+			} else {
+				enrollmentDebug.html('Estudiante si esta registrado');
+				isValid = true;
+			}
+
+			if (isValid) {
+				fetch("{% url 'courses:students' enrollment_id %}", {
+					method: 'POST',
+					body: form,
+					headers: { "X-CSRFToken": csrftoken },
+				})
+				.then(function(response) {
+					if (response.ok) {
+						return response.json();
+					} else {
+						return response.json();
+					}
+				})
+
+				.then(function(response) {
+					if (response.status == 201) {
+						alert(response.message);
+    					$('#InscribirAlumnoCloseModalButton').click();
+
+					} else if (response.status == 400) {
+						$('#enrollment-debug').html(response.message);
+					
+					} else {
+						alert(response.message);
+					}
+				})
+			}
+		});
+	});
+
+</script>
+{% endblock %}

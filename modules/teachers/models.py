@@ -30,13 +30,14 @@ class Teacher(BaseModel):
 		as_dict['identification_number'] = self.identification_number
 		as_dict['names'] = self.names
 		as_dict['surnames'] = self.surnames
-		as_dict['account'] = self.account.to_json()
+		if self.account:
+			as_dict['account'] = self.account.to_json()
 
 		return as_dict
 
 	def full_name(self):
-		first_name = names.split()[0]
-		first_surname = surnames.split()[0]
+		first_name = self.names.split()[0]
+		first_surname = self.surnames.split()[0]
 
 		return "{name} {surname}".format(
 			name=first_name,

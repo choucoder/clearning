@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from ..categories.models import Category
 from ..core.models import BaseModel
+from ..students.models import Student
 from ..teachers.models import Teacher
 
 
@@ -33,7 +34,7 @@ class Course(BaseModel):
 			course_as_dict['categories'].append(category.to_json())
 
 		return course_as_dict
-
+		
 
 class CourseOpening(BaseModel):
 
@@ -50,9 +51,11 @@ class CourseOpening(BaseModel):
 	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 	course = models.ForeignKey(Course, on_delete=models.CASCADE)
 	teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE)
+	price = models.FloatField(default=20)
 
 	start_date = models.DateField(default=timezone.now)
 	end_date = models.DateField()
+	students = models.ManyToManyField(Student, through='Enrollment')
 
 	status = models.PositiveSmallIntegerField(default=STATUS_CHOICES[0][0],
 											  choices=STATUS_CHOICES)
@@ -77,3 +80,30 @@ class CourseOpening(BaseModel):
 		as_dict['status'] = self.get_status_display()
 
 		return as_dict
+
+
+class Enrollment(BaseModel):
+	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+	opening = models.ForeignKey(CourseOpening, on_delete=models.CASCADE)
+	student = models.ForeignKey(Student, on_delete=models.CASCADE)
+
+	def __str__(self):
+		return "{id} - Estudiante '{student_name}' inscrito en curso '{course_name}' en el periodo {start_date} - {end_date}".format(
+			id=self.id,
+			course_name=self.opening.course.name,
+			student_name=self.student.full_name(),
+			start_date=str(self.opening.start_date),
+			end_date=str(self.opening.end_date),
+		)
+
+
+class EnrollmentPayment(BaseModel):
+	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+	enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+	amount = models.FloatField()
+
+	def __str__(self):
+		return "{id} {amount}".format(
+			id=self.id,
+			amount=self.amount
+		)

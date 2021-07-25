@@ -3,9 +3,10 @@ from django.shortcuts import render
 from django.views import View
 
 from ..categories.models import Category
-from ..courses.models import Course
+from ..courses.models import Course, CourseOpening
 from ..students.models import Student
 from ..teachers.models import Teacher
+from users.models import UserAccount
 
 
 class HomeView(LoginRequiredMixin, View):
@@ -14,7 +15,20 @@ class HomeView(LoginRequiredMixin, View):
 
 	def get(self, request):
 		context = {}
+		account = request.user
+
+		if account.user_type in (UserAccount.SUBSCRIPTION, UserAccount.ADMIN):
+			courses = CourseOpening.objects.all()
+		elif account.user_type == UserAccount.TEACHER:
+			teacher = Teacher.objects.filter(account=account).first()
+			courses = CourseOpening.objects.filter(teacher=teacher)
+		else:
+			# Asegurar que se traiga los cursos en los que se encuentra
+			# ese estudiante
+			courses = CourseOpening.objects.filter()
+
 		context['categories'] = Category.objects.all()
 		context['courses'] = Course.objects.all()
 		context['teachers'] = Teacher.objects.all()
+		context['opened_courses'] = courses
 		return render(request, self.template_name, context)

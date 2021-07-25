@@ -24,4 +24,5 @@ urlpatterns = [
     path('', include('modules.main.urls')),
     path('plans/', include('modules.plans.urls')),
     path('courses/', include('modules.courses.urls')),
+    path('enrollments/', include('modules.enrollments.urls')),
 ]
