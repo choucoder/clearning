@@ -9,8 +9,8 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
 
-from .forms import CourseCreateForm, CourseOpeningForm, EnrollmentForm
-from .models import Course, CourseOpening
+from .forms import CourseCreateForm, CourseOpeningForm, EnrollmentForm, EnrollmentDeleteForm
+from .models import Course, CourseOpening, Enrollment, EnrollmentPayment
 from modules.categories.models import Category
 from modules.students.models import Student
 from modules.teachers.models import Teacher
@@ -251,8 +251,42 @@ class CourseStudentsView(View):
 
 			if form.is_valid():
 				form = form.cleaned_data
-				context['status'] = 201
-				context['message'] = "Se ha inscrito el alumno en el curso"
+				register_checkbox = form['student_register_checkbox']
+
+				if register_checkbox == 'on':
+					identification_number = form['student_identification_number']
+					student = Student.objects.filter(identification_number=identification_number).first()
+
+					if student:
+						context['status'] = 400
+						context['message'] = f"Ya existe un estudiante registrado con esa cedula"
+					else:
+						student = Student()					
+						student.identification_number = identification_number
+						student.names = form['student_names']
+						student.surnames = form['student_surnames']
+						student.email = form['student_email']
+						student.phone = form['student_phone']
+						student.save()
+				else:
+					student_id = form['student_name_search']
+					student = Student.objects.get(id=student_id)
+
+				if not 'status' in context:
+					# TODO validar que el estudiante a inscribir no este inscrito en ese curso
+					enrollment = Enrollment()
+					enrollment.opening = opening
+					enrollment.student = student
+					enrollment.save()
+
+					payment = EnrollmentPayment()
+					payment.enrollment = enrollment
+					payment.amount = form['student_payment']
+					payment.save()
+
+					context['data'] = student.to_json()
+					context['status'] = 201
+					context['message'] = f"Se ha inscrito el alumno en el curso {opening.course.name}"
 			else:
 				context['status'] = 400
 				context['message'] = "Datos no validos. Revise el formulario e intentelo de nuevo."
@@ -264,5 +298,48 @@ class CourseStudentsView(View):
 		except Exception as e:
 			context['status'] = 500
 			context['message'] = f"Error interno del servidor: {e}"
+
+		return JsonResponse(context)
+
+
+class CourseStudentDeleteView(View):
+
+	form = EnrollmentDeleteForm
+
+	def post(self, request, enrollment_id):
+		context = {}
+
+		try:
+			opening = CourseOpening.objects.get(id=enrollment_id)
+			form = EnrollmentDeleteForm(request.POST)
+
+			print(f"Formulario: {form}")
+
+			if form.is_valid():
+				form = form.cleaned_data
+				student_id = form['student_id']
+				student = Student.objects.get(id=student_id)
+				enrollment = Enrollment.objects.filter(student=student, opening=opening).first()
+				
+				if enrollment:
+					EnrollmentPayment.objects.filter(enrollment=enrollment).delete()
+					enrollment.delete()
+
+				context['status'] = 200
+				context['message'] = "Estudiante ha sido removido del curso"
+				context['data'] = student.to_json()
+
+			else:
+				context['status'] = 400
+				context['message'] = f"Datos no validos."
+
+		except ObjectDoesNotExist as e:
+			context['status'] = 404
+			context['message'] = f"Recurso {e} no encontrado"
+
+		except Exception as e:
+			traceback.print_exc()
+			context['status'] = 500
+			context['message'] = f"Error interno del servidor"
 
 		return JsonResponse(context)

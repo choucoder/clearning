@@ -40,3 +40,7 @@ class EnrollmentForm(forms.Form):
 	student_payment = forms.FloatField(required=False)
 
 	student_register_checkbox = forms.CharField(required=False)
+
+
+class EnrollmentDeleteForm(forms.Form):
+	student_id = forms.CharField(required=True)
