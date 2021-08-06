@@ -1,3 +1,4 @@
+from json import dumps, loads
 from uuid import uuid4
 
 from django.db import models
@@ -11,14 +12,14 @@ class Category(BaseModel):
 	name = models.CharField(max_length=128, unique=True)
 
 	def __str__(self):
-		return "{id} {name}".format(
+		return "Categoria({id}, {name})".format(
 			id=self.id,
 			name=self.name
 		)
 
-	def to_json(self):
-		as_dict = {}
-		as_dict['id'] = str(self.id)
-		as_dict['name'] = self.name
+	def to_json(self, *args, **kwargs):
+		as_json = loads(super().to_json(*args, **kwargs))
+		as_json['id'] = str(self.id)
+		as_json['name'] = self.name
 
-		return as_dict
+		return dumps(as_json)

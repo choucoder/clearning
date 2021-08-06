@@ -1,4 +1,5 @@
 from datetime import datetime
+from json import dumps, loads
 from uuid import uuid4
 
 from django.db import models
@@ -15,19 +16,19 @@ class Student(BaseModel):
 	email = models.EmailField(max_length=64, unique=True)
 	phone = models.CharField(max_length=16, default="")
 
+	def to_json(self, *args, **kwargs):
+		as_json = loads(super().to_json(*args, **kwargs))
+		as_json['id'] = str(self.id)
+		as_json['identification_number'] = self.identification_number
+		as_json['names'] = self.names
+		as_json['surnames'] = self.surnames
+		as_json['email'] = self.email
+		as_json['phone'] = self.phone
 
-	def to_json(self):
-		return {
-			'id': str(self.id),
-			'identification_number': self.identification_number,
-			'names': self.names,
-			'surnames': self.surnames,
-			'email': self.email,
-			'phone': self.phone,
-		}
+		return dumps(as_json)
 
 	def __str__(self):
-		return "{identification_number}, {names}, {surnames}".format(
+		return "Estudiante({identification_number}, {names}, {surnames})".format(
 			identification_number=self.identification_number,
 			names=self.names,
 			surnames=self.surnames
@@ -38,24 +39,3 @@ class Student(BaseModel):
 		surname = self.surnames.split()[0]
 
 		return f"{name} {surname}"
-
-	def asistio(self):
-		now = datetime.now()
-		asistencia = AsistenciaBasica.objects.filter(
-			student=self, year=now.year, month=now.month, day=now.day
-		).first()
-
-		print(f"Asistencia: {asistencia}")
-
-		if asistencia != None:
-			return 'true'
-		else:
-			return 'false'
-
-
-class AsistenciaBasica(BaseModel):
-
-	student = models.ForeignKey(Student, on_delete=models.CASCADE)
-	year = models.IntegerField()
-	month = models.IntegerField()
-	day = models.IntegerField()

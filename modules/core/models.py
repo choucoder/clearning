@@ -1,3 +1,5 @@
+from json import dumps, loads
+
 from django.db import models
 
 
@@ -17,24 +19,14 @@ class BaseModel(models.Model):
 		default=status_choices[0][0]
 	)
 
-	def to_json(self):
-		as_dict = {}
+	def to_json(self, *args, **kwargs):
+		as_json = {}
+		as_json['created_at'] = str(self.created_at)
+		as_json['updated_at'] = str(self.updated_at)
+		as_json['status'] = self.status
+		as_json['status_display'] = self.get_status_display()
 
-		for attr, value in self.__dict__.items():
-			if type(value) in (int, float, bool, str, ):
-				as_dict[attr] = value
-			elif type(value) in (BaseModel, ):
-				as_dict[attr] = value.to_json()
-			elif type(value) in (models.DateTimeField, models.DateField, ):
-				as_dict[attr] = str(value)
-			else:
-				# Convert to str or None
-				try:
-					as_dict[attr] = str(value)
-				except:
-					pass
-
-		return as_dict
+		return dumps(as_json)
 
 	class Meta:
 		abstract = True
