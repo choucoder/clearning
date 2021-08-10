@@ -32,7 +32,7 @@ class Course(BaseModel):
 		as_json['categories'] = []
 
 		for category in self.categories.all():
-			as_json['categories'].append(category.to_json())
+			as_json['categories'].append(loads(category.to_json()))
 
 		return as_json
 		
@@ -74,8 +74,8 @@ class CourseOpening(BaseModel):
 	def to_json(self, *args, **kwargs):
 		as_json = loads(super().to_json(*args, **kwargs))
 		as_json['id'] = str(self.id)
-		as_json['course'] = self.course.to_json()
-		as_json['teacher'] = self.teacher.to_json()
+		as_json['course'] = loads(self.course.to_json())
+		as_json['teacher'] = loads(self.teacher.to_json())
 		as_json['price'] = self.price
 		as_json['start_date'] = str(self.start_date)
 		as_json['end_date'] = str(self.end_date)
@@ -108,14 +108,14 @@ class Enrollment(BaseModel):
 	def to_json(self):
 		as_json = loads(super().to_json())
 		as_json['id'] = str(self.id)
-		as_json['opening'] = self.opening.to_json()
-		as_json['student'] = self.student.to_json()
+		as_json['opening'] = loads(self.opening.to_json())
+		as_json['student'] = loads(self.student.to_json())
 		as_json['notes'] = []
 
 		notes = ExamNote.objects.filter(enrollment=self)
 
 		for note in notes:
-			as_json['notes'].append(note.to_json())
+			as_json['notes'].append(loads(note.to_json()))
 
 		return dumps(as_json)
 
@@ -134,7 +134,7 @@ class EnrollmentPayment(BaseModel):
 	def to_json(self, *args, **kwargs):
 		as_json = loads(super().to_json(*args, **kwargs))
 		as_json['id'] = str(self.id)
-		as_json['enrollment'] = self.enrollment.to_json()
+		as_json['enrollment'] = loads(self.enrollment.to_json())
 		as_json['amount'] = self.amount
 
 		return dumps(as_json)
@@ -158,6 +158,6 @@ class ExamNote(BaseModel):
 		as_json = loads(super().to_json())
 		as_json['id'] = str(self.id)
 		as_json['note'] = self.note
-		as_json['enrollment'] = self.enrollment.to_json()
+		as_json['enrollment'] = loads(self.enrollment.to_json())
 
 		return dumps(as_json)

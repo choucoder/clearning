@@ -35,7 +35,7 @@ class Teacher(BaseModel):
 		as_json['phone'] = self.surnames
 
 		if self.account:
-			as_json['account'] = self.account.to_json()
+			as_json['account'] = loads(self.account.to_json())
 
 		return dumps(as_json)
 

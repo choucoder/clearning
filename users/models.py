@@ -1,3 +1,4 @@
+from json import dumps, loads
 from uuid import uuid4
 
 from django.contrib.auth.models import AbstractUser, User
@@ -39,23 +40,22 @@ class UserAccount(AbstractUser):
 	def full_name(self):
 		return f"{self.first_name} {self.last_name}"
 
-
 	def to_json(self, subscriptions=False):
-		as_dict = {}
-		as_dict['id'] = str(self.id)
-		as_dict['first_name'] = self.first_name
-		as_dict['last_name'] = self.last_name
-		as_dict['user_type'] = self.user_type
-		as_dict['user_type_display'] = self.get_user_type_display()
-		as_dict['verified'] = self.verified
+		as_json = {}
+		as_json['id'] = str(self.id)
+		as_json['first_name'] = self.first_name
+		as_json['last_name'] = self.last_name
+		as_json['user_type'] = self.user_type
+		as_json['user_type_display'] = self.get_user_type_display()
+		as_json['verified'] = self.verified
 
 		if subscriptions:
-			as_dict['subscriptions'] = []
+			as_json['subscriptions'] = []
 
 			for s in self.subscriptions.all():
-				as_dict['subscriptions'].append(s.to_json())
+				as_json['subscriptions'].append(loads(s.to_json()))
 
-		return as_dict
+		return dumps(as_json)
 
 
 class AccountSubscriptions(BaseModel):
@@ -81,3 +81,12 @@ class AccountSubscriptions(BaseModel):
 			account=str(self.account),
 			plan=str(self.plan)
 		)
+
+	def to_json(self):
+		as_json = {}
+		as_json['id'] = str(self.id)
+		as_json['account'] = loads(self.account.to_json())
+		as_json['plan'] = loads(self.plan.to_json())
+		as_json['status'] = self.status
+
+		return dumps(as_json)
