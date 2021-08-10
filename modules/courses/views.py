@@ -1,4 +1,5 @@
 from datetime import datetime
+from json import dumps, loads
 from random import randint
 from pprint import pprint
 import traceback
@@ -43,7 +44,7 @@ class CoursesView(LoginRequiredMixin, View):
 
 				context['status'] = 201
 				context['message'] = f"El curso {course.name} ha sido registrado con exito"
-				context['data'] = course.to_json()
+				context['data'] = loads(course.to_json())
 
 			else:
 				context['status'] = 400
@@ -65,7 +66,7 @@ class CourseView(View):
 			course = Course.objects.get(id=course_id)
 			context['status'] = 200
 			context['message'] = f"Curso {course.name}"
-			context['data'] = course.to_json()
+			context['data'] = loads(course.to_json())
 
 		except Exception as e:
 			context['status'] = 500
@@ -190,7 +191,7 @@ class CourseOpeningView(View):
 
 					context['status'] = 201
 					context['message'] = "Se ha realizado la apertura de un curso de manera exitosa"
-					context['data'] = opening.to_json()
+					context['data'] = loads(opening.to_json())
 			else:
 				context['status'] = 400
 				context['message'] = "Faltan datos. Reviselos e intentelo de nuevo"
@@ -284,7 +285,7 @@ class CourseStudentsView(View):
 					payment.amount = form['student_payment']
 					payment.save()
 
-					context['data'] = student.to_json()
+					context['data'] = loads(student.to_json())
 					context['status'] = 201
 					context['message'] = f"Se ha inscrito el alumno en el curso {opening.course.name}"
 			else:
@@ -327,7 +328,7 @@ class CourseStudentDeleteView(View):
 
 				context['status'] = 200
 				context['message'] = "Estudiante ha sido removido del curso"
-				context['data'] = student.to_json()
+				context['data'] = loads(student.to_json())
 
 			else:
 				context['status'] = 400

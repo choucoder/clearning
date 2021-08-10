@@ -1,3 +1,5 @@
+from json import dumps, loads
+
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
@@ -59,7 +61,7 @@ class TeacherView(View):
 			teacher = Teacher.objects.get(id=teacher_id)
 			context['status'] = 200
 			context['message'] = f"Profesor {teacher.full_name()}"
-			context['data'] = teacher.to_json()
+			context['data'] = loads(teacher.to_json())
 
 		except Exception as e:
 			context['status'] = 500
