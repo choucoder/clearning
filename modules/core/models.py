@@ -1,4 +1,5 @@
 from json import dumps, loads
+from uuid import uuid4
 
 from django.db import models
 
@@ -30,3 +31,27 @@ class BaseModel(models.Model):
 
 	class Meta:
 		abstract = True
+
+
+class Day(models.Model):
+
+	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+	es_name = models.CharField(max_length=8, unique=True)
+	en_name = models.CharField(max_length=8, unique=True)
+	day_number = models.IntegerField(unique=True)
+
+	def __str__(self):
+		return "Dia({es_name}, {en_name}, {day_number})".format(
+			es_name=self.es_name,
+			en_name=self.en_name,
+			day_number=self.day
+		)
+
+	def to_json(self):
+		as_json = loads(super().to_json())
+		as_json['id'] = str(self.id)
+		as_json['es_name'] = self.es_name
+		as_json['en_name'] = self.en_name
+		as_json['day_number'] = self.day_number
+
+		return dumps(as_json)

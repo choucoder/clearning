@@ -6,7 +6,7 @@ from django.db import models
 from django.utils import timezone
 
 from ..categories.models import Category
-from ..core.models import BaseModel
+from ..core.models import BaseModel, Day
 from ..students.models import Student
 from ..teachers.models import Teacher
 
@@ -159,5 +159,31 @@ class ExamNote(BaseModel):
 		as_json['id'] = str(self.id)
 		as_json['note'] = self.note
 		as_json['enrollment'] = loads(self.enrollment.to_json())
+
+		return dumps(as_json)
+
+
+class Schedule(BaseModel):
+
+	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+	day = models.ForeignKey(Day, on_delete=models.CASCADE)
+	opening = models.ForeignKey(CourseOpening, on_delete=models.CASCADE)
+	entry_time = models.TimeField()
+	departure_time = models.TimeField()
+
+	def __str__(self):
+		return "Horario({day}, {entry_time} - {departure_time})".format(
+			day=self.day.es_name,
+			entry_time=self.entry_time,
+			departure_time=self.departure_time
+		)
+
+	def to_json(self):
+		as_json = loads(super().to_json())
+		as_json['id'] = str(self.id)
+		as_json['day'] = loads(self.day.to_json())
+		as_json['opening'] = loads(self.opening.to_json())
+		as_json['entry_time'] = str(self.entry_time)
+		as_json['departure_time'] = str(self.departure_time)
 
 		return dumps(as_json)

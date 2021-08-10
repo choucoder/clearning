@@ -22,32 +22,100 @@
 		<h6 class="m-0 font-weight-bold text-primary">Asistencia {% now "d" %} {% now "M" %}, {% now "D" %}</h6>
 	</div>
 	<div class="card-body">
-        <div class="table-responsive">
-            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
-                <thead>
-                    <tr>
-                        <th>Cedula</th>
-                        <th>Nombre</th>
-                        <th>Apellido</th>
-                        <th>Correo</th>
-                        <th>Telefono</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="StudentTableBody">
-                	{% for student in data %}
-                		<tr id="table-row-{{ student.id }}">
-                			<td>{{ student.identification_number }}</td>
-                			<td>{{ student.names }}</td>
-                			<td>{{ student.surnames }}</td>
-                			<td>{{ student.email }}</td>
-                			<td>{{ student.phone }}</td>
-                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
-                		</tr>
-                	{% endfor %}
-                </tbody>
-            </table>
-        </div>
+		<nav>
+            <div class="nav nav-pills nav-fill" id="nav-tab" role="tablist">
+              	<a class="nav-link active" data-toggle="tab" href="#matricula" id="link-matricula">Matricula</a>
+              	<a class="nav-link" data-toggle="tab" href="#attendances" id="link-attendances">Asistencias</a>
+              	<a class="nav-link" data-toggle="tab" href="#notes" id="link-notes">Notas</a>
+            </div>
+        <br>
+        </nav>
+        <div class="tab-content">
+	        <div class="tab-pane fade show active" id="matricula">
+	        	<div class="table-responsive">
+		            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+		                <thead>
+		                    <tr>
+		                        <th>Cedula</th>
+		                        <th>Nombre</th>
+		                        <th>Apellido</th>
+		                        <th>Correo</th>
+		                        <th>Telefono</th>
+		                        <th>Acciones</th>
+		                    </tr>
+		                </thead>
+		                <tbody id="StudentTableBody">
+		                	{% for student in data %}
+		                		<tr id="table-row-{{ student.id }}">
+		                			<td>{{ student.identification_number }}</td>
+		                			<td>{{ student.names }}</td>
+		                			<td>{{ student.surnames }}</td>
+		                			<td>{{ student.email }}</td>
+		                			<td>{{ student.phone }}</td>
+		                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
+		                		</tr>
+		                	{% endfor %}
+		                </tbody>
+		            </table>
+	        	</div>
+	        </div>
+	        <div class="tab-pane fade" id="attendances">
+	        	<div class="table-responsive">
+		            <table class="table table-bordered" id="attendances-table" width="100%" cellspacing="0">
+		                <thead id="attendances-table-head">
+		                    <tr>
+		                        <th>Cedula</th>
+		                        <th>Nombre</th>
+		                        <th>Apellido</th>
+		                        <th>Correo</th>
+		                        <th>Telefono</th>
+		                        <th>Acciones</th>
+		                    </tr>
+		                </thead>
+		                <tbody id="attendances-table-body">
+		                	{% for student in data %}
+		                		<tr id="attendances-row-{{ student.id }}">
+		                			<td>{{ student.identification_number }}</td>
+		                			<td>{{ student.names }}</td>
+		                			<td>{{ student.surnames }}</td>
+		                			<td>{{ student.email }}</td>
+		                			<td>{{ student.phone }}</td>
+		                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
+		                		</tr>
+		                	{% endfor %}
+		                </tbody>
+		            </table>
+	        	</div>
+	        </div>
+	        <div class="tab-pane fade" id="notes">
+	        	<div class="table-responsive">
+		            <table class="table table-bordered" id="table-notes" width="100%" cellspacing="0">
+		                <thead id="table-notes-head">
+		                    <tr>
+		                        <th>Cedula</th>
+		                        <th>Nombre</th>
+		                        <th>Apellido</th>
+		                        <th>Correo</th>
+		                        <th>Telefono</th>
+		                        <th>Acciones</th>
+		                    </tr>
+		                </thead>
+		                <tbody id="table-notes-body">
+		                	{% for student in data %}
+		                		<tr id="notes-row-{{ student.id }}">
+		                			<td>{{ student.identification_number }}</td>
+		                			<td>{{ student.names }}</td>
+		                			<td>{{ student.surnames }}</td>
+		                			<td>{{ student.email }}</td>
+		                			<td>{{ student.phone }}</td>
+		                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
+		                		</tr>
+		                	{% endfor %}
+		                </tbody>
+		            </table>
+	        	</div>
+	        </div>
+    	</div>
 	</div>
 </div>
 
@@ -306,6 +374,14 @@
 				})
 			}
 		});
+
+		$("#link-attendances").on("click", function(e) {
+			e.preventDefault();
+		})
+
+		$("#link-notes").on("click", function(e) {
+			e.preventDefault();
+		})
 	});
 
 </script>
