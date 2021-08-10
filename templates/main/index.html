@@ -37,18 +37,19 @@
                         </tr>
                     </thead>
                     <tbody id="StudentTableBody">
-                    	{% for course in opened_courses %}
-                    		<tr id="{{ course.id }}">
-                    			<td>{{ course.course.name }}</td>
+                    	{% for opening in opened_courses %}
+                    		<tr id="{{ opening.id }}">
+                    			<td>{{ opening.course.name }}</td>
                     			{% if request.user.user_type == 2 %}
-                    				<td>{{ course.teacher.full_name }}</td>
+                    				<td>{{ opening.teacher.full_name }}</td>
                     			{% endif %}
-                    			<td>{{ course.start_date }}</td>
-                    			<td>{{ course.end_date }}</td>
-                    			<td>{{ course.price }}</td>
-                    			<td>{{ course.get_status_display }}</td>
+                    			<td>{{ opening.start_date }}</td>
+                    			<td>{{ opening.end_date }}</td>
+                    			<td>{{ opening.price }}</td>
+                    			<td>{{ opening.get_status_display }}</td>
                     			<td>
-                    				<a href="{% url 'courses:students' course.id %}" class="info">Matricula</a>
+                    				<a href="{% url 'courses:students' opening.id %}" class="info">Matricula</a>
+									<a href="{% url 'courses:schedules' opening.id %}" class="info">Horarios</a>
                     			</td>
                     		</tr>
                     	{% endfor %}

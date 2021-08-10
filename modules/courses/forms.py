@@ -44,3 +44,14 @@ class EnrollmentForm(forms.Form):
 
 class EnrollmentDeleteForm(forms.Form):
 	student_id = forms.CharField(required=True)
+
+
+class CourseScheduleForm(forms.Form):
+
+	day = forms.CharField(required=True)
+	entry_time = forms.CharField(required=True)
+	departure_time = forms.CharField(required=True)
+
+
+class CourseScheduleDeleteForm(forms.Form):
+	schedule_id = forms.CharField(required=True)

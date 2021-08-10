@@ -10,8 +10,12 @@ from django.http import JsonResponse
 from django.shortcuts import render
 from django.views import View
 
-from .forms import CourseCreateForm, CourseOpeningForm, EnrollmentForm, EnrollmentDeleteForm
-from .models import Course, CourseOpening, Enrollment, EnrollmentPayment
+from .forms import (
+	CourseCreateForm, CourseOpeningForm, EnrollmentForm,
+	EnrollmentDeleteForm, CourseScheduleDeleteForm,
+	CourseScheduleForm,
+)
+from .models import Course, CourseOpening, Enrollment, EnrollmentPayment, Schedule
 from modules.categories.models import Category
 from modules.students.models import Student
 from modules.teachers.models import Teacher
@@ -342,5 +346,123 @@ class CourseStudentDeleteView(View):
 			traceback.print_exc()
 			context['status'] = 500
 			context['message'] = f"Error interno del servidor"
+
+		return JsonResponse(context)
+
+
+class CourseSchedulesView(View):
+
+	form = CourseScheduleForm
+
+	def get(self, request, enrollment_id):
+		context = {}
+
+		try:
+			opening = CourseOpening.objects.get(id=enrollment_id)
+			schedules = Schedule.objects.filter(opening=opening)
+
+			_schedules = []
+
+			for schedule in schedules:
+				_schedules.append(loads(schedule.to_json()))
+
+			context['status'] = 200
+			context['data'] = _schedules
+			context['message'] = f"Horarios del curso {opening.course.name}"
+
+		except ObjectDoesNotExist:
+			context['status'] = 404
+			context['message'] = "Apertura de curso no existe"
+
+		except Exception as e:
+			context['status'] = 500
+			context['message'] = f"Error interno del servidor: {e}"
+
+		return JsonResponse(context)
+
+
+	def post(self, request, enrollment_id):
+		context = {}
+
+		try:
+			form = self.form(request.POST)
+
+			if form.is_valid():
+				form = form.cleaned_data
+				opening = CourseOpening.objects.get(id=enrollment_id)
+				
+				day = Day.objects.get(id=form['day'])
+				entry_time = form['entry_time']
+				departure_time = form['departure_time']
+
+				entry_time = datetime.strptime(entry_time, '%H:%M').time()
+				departure_time = datetime.strptime(departure_time, '%H:%M').time()
+
+				
+				schedule = Schedule.objects.filter(day=day, opening=opening).first()
+
+				if schedule:
+					schedule.entry_time = entry_time
+					scheudle.departure_time = departure_time
+					schedule.save()
+					context['status'] = 200
+					context['message'] = f"Se ha actualizado las horas del dia {day.es_name}"
+
+				else:
+					schedule = Schedule()
+					schedule.day = day
+					schedule.opening = opening
+					schedule.entry_time = entry_time
+					schedule.departure_time = departure_time
+					schedule.save()
+					context['status'] = 201
+					context['message'] = f"El horario fue registrado exitosamente"
+				
+				context['data'] = loads(schedule.to_json())
+			else:
+				context['status'] = 400
+				context['message'] = "Datos invalidos, por favor verifique los datos enviados"
+
+		except ObjectDoesNotExist as e:
+			context['status'] = 404
+			context['message'] = f"Recurso no encontrado: {e}"
+
+		except Exception as e:
+			context['status'] = 500
+			context['message'] = f"Error interno del servidor: {e}"
+
+		return JsonResponse(context)
+
+
+class CourseScheduleDeleteView(View):
+
+	form = CourseScheduleDeleteForm()
+
+	def post(self, request, enrollment_id):
+		context = {}
+
+		try:
+			form = self.form(request.POST)
+
+			if form.is_valid():
+				form = form.cleaned_data
+				opening = CourseOpening.objects.get(id=enrollment_id)
+				schedule = Schedule.objects.get(opening=opening, id=form['schedule_id'])
+				schedule.delete()
+
+				context['status'] = 200
+				context['message'] = "El horario de clase ha sido eliminado"
+				context['data'] = loads(schedule.to_json())
+			else:
+				context['status'] = 400
+				context['message'] = "Datos invalidos, por favor verifique los datos enviados"
+
+		except ObjectDoesNotExist as e:
+			context['status'] = 404
+			context['message'] = f"Recurso no encontrado {e}"
+
+		except Exception as e:
+			context['status'] = 500
+			context['message'] = f"Error interno del servidor: {e}"
 
 		return JsonResponse(context)
