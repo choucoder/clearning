@@ -5,12 +5,14 @@ from uuid import uuid4
 from django.db import models
 
 from ..core.models import BaseModel
+from ..core.utils import get_default_uuid
 
 
 class Student(BaseModel):
 
 	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 	identification_number = models.CharField(max_length=16, unique=True)
+	qrcode = models.CharField(max_length=36, default=get_default_uuid)
 	names = models.CharField(max_length=64)
 	surnames = models.CharField(max_length=64)
 	email = models.EmailField(max_length=64, unique=True)
