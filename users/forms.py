@@ -13,3 +13,9 @@ class AccountRegisterForm(forms.Form):
 	username = forms.CharField(max_length=128)
 	password = forms.CharField(max_length=128)
 	password_confirm = forms.CharField(max_length=128)
+
+
+class ForgotPasswordForm(forms.Form):
+	username = forms.CharField(max_length=128)
+	password = forms.CharField(max_length=128)
+	password_confirm = forms.CharField(max_length=128)
