@@ -1,10 +1,11 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from json import dumps, loads
 from uuid import uuid4
 
 from django.db import models
 from django.utils import timezone
 
+from ..attendances.models import Attendance
 from ..categories.models import Category
 from ..core.models import BaseModel, Day
 from ..students.models import Student
@@ -34,7 +35,7 @@ class Course(BaseModel):
 		for category in self.categories.all():
 			as_json['categories'].append(loads(category.to_json()))
 
-		return as_json
+		return dumps(as_json)
 		
 
 class CourseOpening(BaseModel):
@@ -70,6 +71,26 @@ class CourseOpening(BaseModel):
 			status=self.get_status_display()
 		)
 
+	def get_school_days(self):
+		schedules = Schedule.objects.filter(opening=self)
+		school_days = []
+
+		course_enrollment_date = self.start_date
+		course_enrollment_end_date = self.end_date
+
+		while course_enrollment_date <= course_enrollment_end_date:
+			day_number = course_enrollment_date.weekday()
+			day = Day.objects.get(day_number=day_number)
+
+
+			for schedule in schedules:
+				if schedule.day == day:
+					school_days.append((day, course_enrollment_date))
+					print(f"[CLASE] {day}, {course_enrollment_date}")
+
+			course_enrollment_date += timedelta(days=1)
+
+		return school_days
 
 	def to_json(self, *args, **kwargs):
 		as_json = loads(super().to_json(*args, **kwargs))
@@ -105,17 +126,54 @@ class Enrollment(BaseModel):
 			end_date=str(self.opening.end_date),
 		)
 
+	def get_attendances(self):
+		school_days = self.opening.get_school_days()
+		school_days_until_today = []
+
+		date_now = datetime.today().date()
+
+		for day, date in school_days:
+			if date <= date_now:
+				school_days_until_today.append((day, date))
+
+		attendances = []
+
+		for day, date in school_days_until_today:
+			attendance = Attendance.objects.filter(date=date).first()
+			if attendance:
+				attendances.append((True, str(date)))
+			else:
+				attendances.append((False, str(date)))
+
+		return attendances
+
+	def get_notes(self):
+		exams = ExamNote.objects.filter(enrollment=self)
+		notes = [exam.note for exam in exams]
+
+		if len(notes) < 3:
+			notes = notes + ['-']*(3 - len(notes))
+
+		return notes
+
+	def get_final_note(self):
+		exams = ExamNote.objects.filter(enrollment=self)
+		notes = [exam.note for exam in exams]
+
+		try:
+			final_note = sum(notes) / 3
+		except ZeroDivisionError:
+			final_note = 0
+
+		return final_note
+
 	def to_json(self):
 		as_json = loads(super().to_json())
 		as_json['id'] = str(self.id)
 		as_json['opening'] = loads(self.opening.to_json())
 		as_json['student'] = loads(self.student.to_json())
-		as_json['notes'] = []
-
-		notes = ExamNote.objects.filter(enrollment=self)
-
-		for note in notes:
-			as_json['notes'].append(loads(note.to_json()))
+		as_json['notes'] = self.get_notes()
+		as_json['final_note'] = self.get_final_note()
 
 		return dumps(as_json)
 
@@ -169,7 +227,7 @@ class Schedule(BaseModel):
 	day = models.ForeignKey(Day, on_delete=models.CASCADE)
 	opening = models.ForeignKey(CourseOpening, on_delete=models.CASCADE)
 	entry_time = models.TimeField()
-	departure_time = models.TimeField()
+	departure_time = models.TimeField() 
 
 	def __str__(self):
 		return "Horario({day}, {entry_time} - {departure_time})".format(

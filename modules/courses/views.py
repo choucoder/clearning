@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from json import dumps, loads
 from random import randint
 from pprint import pprint
 import traceback
+from uuid import uuid4
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ObjectDoesNotExist
@@ -17,6 +18,7 @@ from .forms import (
 )
 from .models import Course, CourseOpening, Enrollment, EnrollmentPayment, Schedule
 from modules.categories.models import Category
+from modules.core.models import Day
 from modules.students.models import Student
 from modules.teachers.models import Teacher
 from users.models import UserAccount
@@ -154,12 +156,12 @@ class CourseOpeningView(View):
 					else:
 						teacher = Teacher()
 						teacher.identification_number = dni
+						teacher.qrcode = uuid4().hex
 						teacher.email = email
 						teacher.names = form['teacher_names']
 						teacher.surnames = form['teacher_surnames']
 						teacher.phone = form['teacher_phone']
 						teacher.save()
-						# teacher.reload()
 
 						users = UserAccount.objects.filter(email=email)
 						email = email if not users else None
@@ -225,10 +227,16 @@ class CourseStudentsView(View):
 				if student not in enrolled_students:
 					unenrolled_students.append(student)
 
+			# Dias de clase entre fecha inicio - fecha finalizacion
+			school_days = course_enrollment.get_school_days()
+			enrollments_students = Enrollment.objects.filter(opening=course_enrollment)
+
 			context['status'] = 200
 			context['data'] = enrolled_students
 			context['course'] = course_enrollment
 			context['students'] = unenrolled_students
+			context['school_days'] = school_days
+			context['enrollments_students'] = enrollments_students
 			context['enrollment_id'] = enrollment_id
 			context['message'] = f"Estudiantes inscritos en el curso"
 			template_name = self.template_name
@@ -268,8 +276,9 @@ class CourseStudentsView(View):
 					else:
 						student = Student()					
 						student.identification_number = identification_number
-						student.names = form['student_names']
-						student.surnames = form['student_surnames']
+						student.qrcode = uuid4().hex
+						student.names = form['student_names'].upper()
+						student.surnames = form['student_surnames'].upper()
 						student.email = form['student_email']
 						student.phone = form['student_phone']
 						student.save()
@@ -368,6 +377,7 @@ class CourseSchedulesView(View):
 
 			context['status'] = 200
 			context['data'] = _schedules
+			context['days'] = loads(Day.objects.to_json())
 			context['message'] = f"Horarios del curso {opening.course.name}"
 
 		except ObjectDoesNotExist:
@@ -395,6 +405,9 @@ class CourseSchedulesView(View):
 				entry_time = form['entry_time']
 				departure_time = form['departure_time']
 
+				print(f"entry_time: {entry_time}")
+				print(f"departure_time: {departure_time}")
+
 				entry_time = datetime.strptime(entry_time, '%H:%M').time()
 				departure_time = datetime.strptime(departure_time, '%H:%M').time()
 
@@ -403,7 +416,7 @@ class CourseSchedulesView(View):
 
 				if schedule:
 					schedule.entry_time = entry_time
-					scheudle.departure_time = departure_time
+					schedule.departure_time = departure_time
 					schedule.save()
 					context['status'] = 200
 					context['message'] = f"Se ha actualizado las horas del dia {day.es_name}"
@@ -428,6 +441,7 @@ class CourseSchedulesView(View):
 			context['message'] = f"Recurso no encontrado: {e}"
 
 		except Exception as e:
+			traceback.print_exc()
 			context['status'] = 500
 			context['message'] = f"Error interno del servidor: {e}"
 
@@ -436,7 +450,7 @@ class CourseSchedulesView(View):
 
 class CourseScheduleDeleteView(View):
 
-	form = CourseScheduleDeleteForm()
+	form = CourseScheduleDeleteForm
 
 	def post(self, request, enrollment_id):
 		context = {}
