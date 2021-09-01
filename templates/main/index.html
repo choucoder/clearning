@@ -49,7 +49,7 @@
                     			<td>{{ opening.get_status_display }}</td>
                     			<td>
                     				<a href="{% url 'courses:students' opening.id %}" class="info">Matricula</a>
-									<a href="{% url 'courses:schedules' opening.id %}" class="info">Horarios</a>
+									<a href="javascript:void(0);" onclick="openScheduleModal('{{ opening.id }}')" class="info">Horarios</a>
                     			</td>
                     		</tr>
                     	{% endfor %}
@@ -58,6 +58,57 @@
             </div>
 		</div>
 	</div>
+
+    <!-- Editar horario de un curso inscrito -->
+    <div class="modal fade" id="EditarHorarioCursoModal" tabindex="-1" role="dialog" aria-labelledby="EditarHorarioCursoModalLabel" aria-hidden="true">
+    	<div class="modal-dialog" role="document">
+    		<div class="modal-content">
+    			<div class="modal-header">
+    				<h5 class="modal-title" id="EditarHorarioCursoModalTitle">Horarios</h5>
+    				<button id="EditarHorarioCursoModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
+    					<span aria-hidden="true">x</span>
+    				</button>
+    			</div>
+    			<div class="modal-body">
+    				<div class="">
+	    				<form class="user">
+	    					<div class="form-group row">
+	    						<div class="col-sm-4 mb-3 mb-sm-0">
+							    	<label class="">Dia</label>
+						            <select style="border: 1px solid #000;" data-live-search="true" title="Dia" data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100 h-90" id="day" name="day">
+						            </select>
+	    						</div>
+	    						<div class="col-sm-4 mb-3 mb-sm-0">
+							    	<label class="">Entrada</label>
+	                            	<input type="time" placeholder="Hora de entrada" class="form-control form-control-user" id="entry_time" name="entry_time">
+	    						</div>
+	    						<div class="col-sm-4 mb-3 mb-sm-0">
+							    	<label class="">Salida</label>
+	                            	<input type="time" placeholder="Hora de salida" class="form-control form-control-user" id="departure_time" name="departure_time">
+	    						</div>
+	    					</div>
+	    					<input type="hidden" id="opening" name="opening">
+					        <button type="submit" class="btn btn-primary" data-enchanter="finish" id="saveSchedule">Guardar</button>
+	    				</form>
+					    <br>
+	    				<div class="div">
+	    					<table class="table table-stripped" border="0">
+	    						<thead>
+	    							<tr>
+	    								<th>Dia</th>
+	    								<th>Horario</th>
+	    								<th></th>
+	    							</tr>
+	    						</thead>
+	    						<tbody id="table-schedule-body">
+	    						</tbody>
+	    					</table>
+	    				</div>
+    				</div>
+    			</div>
+    		</div>
+    	</div>
+    </div>
 
     <!-- Inscribir curso-->
     <div class="modal fade" id="InscribirCursoModal" tabindex="-1" role="dialog" aria-labelledby="InscribirCursoModalLabel"
@@ -248,6 +299,88 @@
 	        }
 	    }
 	    return cookieValue;
+	}
+
+	function deleteSchedule(elem) {
+		const csrftoken = getCookie('csrftoken');
+
+		let opening_id = $(elem).data('opening');
+		let schedule_id = $(elem).data('schedule');
+
+		let form = new FormData();
+		form.append("schedule_id", schedule_id);
+
+		fetch("courses/enrollments/" + opening_id +  "/schedules-delete", {
+			method: "POST",
+			headers: { "X-CSRFToken": csrftoken },
+			body: form
+		})
+		.then(function(response) {
+			if (response.ok)
+				return response.json();
+			else
+				return response.json();
+		})
+		.then(function(response) {
+			if (response.status == 200) {
+				$('#'+schedule_id).remove();
+			}
+			else {
+				alert(response.message);
+			}
+		})
+		.catch(function(err) {
+
+		})
+	}
+
+	function openScheduleModal(opening_id) {
+		const csrftoken = getCookie('csrftoken');
+		const scheduleModal = $('#EditarHorarioCursoModal');
+		const select = $('#day');
+		const body = $('#table-schedule-body');
+
+		body.empty()
+
+		fetch("courses/enrollments/"+opening_id+"/schedules", {
+			method: 'GET',
+			headers: { "X-CSRFToken": csrftoken },
+		})
+		.then(function(response) {
+			if (response.ok) {
+				return response.json();
+			} else {
+				return response.json();
+			}
+		})
+
+		.then(function(response) {
+			if (response.status == 200) {
+				let schedules = response.data;
+				let days = response.days;
+
+				days.forEach(function(day) {
+					select.append('<option value="'+day.id+'">'+day.es_name+'</option>');
+				})
+
+				schedules.forEach(function(schedule) {
+					let elem = "<tr id='"+schedule.id+"'>";
+					elem += "<td>"+schedule.day.es_name+"</td>";
+					elem += "<td>"+schedule.entry_time+" - "+schedule.departure_time+"</td>";
+					elem += "<td><a href='javascript:void(0);' class='btn btn-danger btn-circle btn-sm' onclick='deleteSchedule(this);' data-schedule='"+schedule.id+"' data-opening='"+opening_id+"'><i class='fa fa-trash'></i></a></td>";
+					elem += "</tr>";
+					body.append(elem);
+				})
+				select.selectpicker('refresh');
+				$('#opening').val(opening_id);
+				scheduleModal.modal('show');
+
+			} else if (response.status == 400) {
+			
+			} else {
+				alert(response.message);
+			}
+		})
 	}
 
 	$(document).ready(function(e) {
@@ -487,6 +620,62 @@
 				teacherSearchSection.fadeIn(100);
 			}
 		});
+
+		$('#saveSchedule').click(function(e) {
+			e.preventDefault()
+			const csrftoken = getCookie('csrftoken');
+
+			let form = new FormData()
+			let day = $('#day').val()
+			let entry_time = $('#entry_time').val()
+			let departure_time = $('#departure_time').val()
+			let opening_id = $('#opening').val()
+
+			form.append('day', day)
+			form.append('entry_time', entry_time)
+			form.append('departure_time', departure_time)
+
+			fetch("courses/enrollments/"+opening_id+"/schedules", {
+				method: 'POST',
+				body: form,
+				headers: { "X-CSRFToken": csrftoken },
+			})
+
+			.then(function(response) {
+				if (response.ok) {
+					return response.json();
+				} else {
+					return response.json();
+				}
+			})
+			.then(function(response) {
+				if (response.status == 200 || response.status == 201) {
+					let schedule = response.data;
+					let body = $('#table-schedule-body');
+					let tr = $('#'+schedule.id);
+
+					let td = "<td>"+schedule.day.es_name+"</td>";
+					td += "<td>"+schedule.entry_time+" - "+schedule.departure_time+"</td>";
+					td += "<td><a href='javascript:void(0);' class='btn btn-danger btn-circle btn-sm' onclick='deleteSchedule("+schedule.id+")' ><i class='fa fa-trash'></i></a></td>";
+
+					if (tr.length) {
+						tr.empty()
+						tr.append(td)
+					
+					} else {
+						let tr = "<tr id='"+schedule.id+"'>" + td + "</tr>";
+						body.append(tr);
+					}
+					alert(response.message)
+				}
+				else if (response.status == 400) {
+					alert(response.message)
+				}
+				else {
+					alert(response.message)
+				}
+			})
+		})
 	});
 
 	const channel = document.getElementById("channel").value;

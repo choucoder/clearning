@@ -9,12 +9,6 @@
 {% block content %}
 <div class="d-sm-flex align-items-center justify-content-between mb-4">
     <h5 class="h5 mb-0 text-gray-800">Estudiantes matriculados en el curso  "{{ course.course.name }}"</h5>
-
-    {% if request.user.user_type == 1 or request.user.user_type == 2 or request.user.user_type == 3%}
-	<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#InscribirAlumnoModal"><i
-	 	class="fas fa-user fa-sm text-white-50"></i>&nbspInscribir alumno</a>
-	 	{% endif %}
-
 </div>
 
 <div class="card shadow mb-4">
@@ -24,16 +18,22 @@
 	<div class="card-body">
 		<nav>
             <div class="nav nav-pills nav-fill" id="nav-tab" role="tablist">
-              	<a class="nav-link active" data-toggle="tab" href="#matricula" id="link-matricula">Matricula</a>
+              	<a class="nav-link active" data-toggle="tab" href="#enrollments" id="link-enrollments">Matricula</a>
               	<a class="nav-link" data-toggle="tab" href="#attendances" id="link-attendances">Asistencias</a>
               	<a class="nav-link" data-toggle="tab" href="#notes" id="link-notes">Notas</a>
             </div>
         <br>
         </nav>
         <div class="tab-content">
-	        <div class="tab-pane fade show active" id="matricula">
+	        <div class="tab-pane fade show active" id="enrollments">   	
+		    	{% if request.user.user_type == 1 or request.user.user_type == 2 or request.user.user_type == 3%}
+					<a href="#" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#InscribirAlumnoModal"><i
+			 			class="fas fa-user fa-sm text-white-50"></i>&nbspInscribir alumno
+			 		</a>
+			 	{% endif %}
+			 	<br/><br/>
 	        	<div class="table-responsive">
-		            <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+		            <table class="table" id="enrollments-table" width="100%" cellspacing="0">
 		                <thead>
 		                    <tr>
 		                        <th>Cedula</th>
@@ -44,9 +44,9 @@
 		                        <th>Acciones</th>
 		                    </tr>
 		                </thead>
-		                <tbody id="StudentTableBody">
+		                <tbody id="enrollments-table-body">
 		                	{% for student in data %}
-		                		<tr id="table-row-{{ student.id }}">
+		                		<tr id="enrollments-row-{{ student.id }}">
 		                			<td>{{ student.identification_number }}</td>
 		                			<td>{{ student.names }}</td>
 		                			<td>{{ student.surnames }}</td>
@@ -61,54 +61,62 @@
 	        </div>
 	        <div class="tab-pane fade" id="attendances">
 	        	<div class="table-responsive">
-		            <table class="table table-bordered" id="attendances-table" width="100%" cellspacing="0">
+		            <table class="table" id="attendances-table" width="100%" cellspacing="0">
 		                <thead id="attendances-table-head">
-		                    <tr>
-		                        <th>Cedula</th>
-		                        <th>Nombre</th>
-		                        <th>Apellido</th>
-		                        <th>Correo</th>
-		                        <th>Telefono</th>
-		                        <th>Acciones</th>
+		                    <tr class="">
+		                    	<th>Cédula</th>
+		                        <th >Nombres y Apellidos</th>
+		                       	{% for day, date in school_days %}
+		                        	<th><small>{{date}}, {{day.es_name}}</small></th>
+		                        {% endfor %}
 		                    </tr>
 		                </thead>
 		                <tbody id="attendances-table-body">
-		                	{% for student in data %}
-		                		<tr id="attendances-row-{{ student.id }}">
-		                			<td>{{ student.identification_number }}</td>
-		                			<td>{{ student.names }}</td>
-		                			<td>{{ student.surnames }}</td>
-		                			<td>{{ student.email }}</td>
-		                			<td>{{ student.phone }}</td>
-		                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
-		                		</tr>
+		                	{% for enrolled_student in enrollments_students %}
+		                		<tr id="attendances-row-{{ enrolled_student.id }}">
+		                			<td>{{ enrolled_student.student.identification_number }}</td>
+		                			<td>{{ enrolled_student.student.names }} {{ enrolled_student.student.surnames }}</td>
+
+		                			{% for attendance, date in enrolled_student.get_attendances %}
+		                				{% if attendance == True %}
+		                					<td><input data-date="{{ date }}" data-enrolled="{{ enrolled_student.id }}" type="checkbox" checked="" onclick="mark_attendance(this);"></td>
+		                				{% else %}
+		                					<td><input data-date="{{ date }}" data-enrolled="{{ enrolled_student.id }}" type="checkbox" onclick="mark_attendance(this);"></td>
+		                				{% endif %}
+		                			{% endfor %}
 		                	{% endfor %}
 		                </tbody>
 		            </table>
 	        	</div>
 	        </div>
 	        <div class="tab-pane fade" id="notes">
+		    	{% if request.user.user_type == 1 or request.user.user_type == 2 or request.user.user_type == 3%}
+					<a href="javascript:void(0)" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm" data-toggle="modal" data-target="#load-note-modal"><i
+			 			class="fas fa-edit fa-sm text-white-50"></i>&nbspCargar nota
+			 		</a>
+			 	{% endif %}
+			 	<br/><br/>
 	        	<div class="table-responsive">
-		            <table class="table table-bordered" id="table-notes" width="100%" cellspacing="0">
-		                <thead id="table-notes-head">
+		            <table class="table" id="notes-table" width="100%" cellspacing="0">
+		                <thead id="notes-table-head">
 		                    <tr>
 		                        <th>Cedula</th>
-		                        <th>Nombre</th>
-		                        <th>Apellido</th>
-		                        <th>Correo</th>
-		                        <th>Telefono</th>
-		                        <th>Acciones</th>
+		                        <th>Nombres y Apellidos</th>
+		                        <th>Nota 1</th>
+		                        <th>Nota 2</th>
+		                        <th>Nota 3</th>
+		                        <th>Nota Final</th>
 		                    </tr>
 		                </thead>
-		                <tbody id="table-notes-body">
-		                	{% for student in data %}
-		                		<tr id="notes-row-{{ student.id }}">
-		                			<td>{{ student.identification_number }}</td>
-		                			<td>{{ student.names }}</td>
-		                			<td>{{ student.surnames }}</td>
-		                			<td>{{ student.email }}</td>
-		                			<td>{{ student.phone }}</td>
-		                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
+		                <tbody id="notes-table-body">
+		                	{% for enrolled_student in enrollments_students %}
+		                		<tr id="notes-row-{{ enrolled_student.id }}">
+		                			<td>{{ enrolled_student.student.identification_number }}</td>
+		                			<td>{{ enrolled_student.student.names }} {{ enrolled_student.student.surnames }}</td>
+		                			{% for note in enrolled_student.get_notes %}
+		                				<td>{{ note }}</td>
+		                			{% endfor %}
+		                			<td>{{ enrolled_student.get_final_note }}</td>
 		                		</tr>
 		                	{% endfor %}
 		                </tbody>
@@ -203,6 +211,57 @@
     </div>
 </div>
 
+<!-- Cargar nota -->
+<div class="modal fade" id="load-note-modal" tabindex="-1" role="dialog" aria-labelledby="load-note-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog " role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">Cargar nota</h5>
+                <button id="InscribirAlumnoCloseModalButton" class="close" type="button" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+            <div class="modal-body">
+				<form class="user" id="load-note-form">
+			        <nav>
+			        <br>
+			        </nav>
+					<div class="" id="step1">
+						<div id="" class="collapse show">
+                            <div class="form-group">
+					            <label class="">Buscar alumno</label>
+					            <!-- Multiselect dropdown -->
+					            <select style="border: 1px solid #000;" data-live-search="true" title="Busca el alumno por el nombre..." data-style="bg-white border rounded-pill px-4 py-3" class="selectpicker w-100" id="enrollment_id" name="enrollment_id">
+					            
+					            {% for enrolled_student in enrollments_students %}
+					                <option data-tokens="{{ enrolled_student.student.identification_number }}" id="option-{{enrolled_student.id}}" value="{{ enrolled_student.id }}">{{ enrolled_student.student.full_name }}</option>
+					            {% endfor %}
+					            </select>
+                            </div>
+                    	</div>
+                    	<div class="form-group">
+				            <label class="">Nota</label>
+                    		<input type="number" placeholder="Nota" class="form-control form-control-user" id="note" name="note" value="0">
+                    	</div>
+                        <small id="enrollment-debug" class="text-danger"></small>
+					</div>
+					<hr>
+			        <div class="row justify-content-between">
+			        	<div class="col-auto">
+			        		<button type="button" id="save-note-prev" class="btn btn-secondary" data-dismiss="modal" aria-label="Close">Cancelar</button>
+			        	</div>
+			            <div class="col-auto">
+			              	<button type="submit" class="btn btn-primary" data-enchanter="finish" id="save-note">Guardar</button>
+			            </div>
+			        </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
 {% endblock %}
 
 {% block additionaljs %}
@@ -235,8 +294,8 @@
 	}
 
 	function appendStudent(student) {
-		let tableBody = $('#StudentTableBody');
-		let row = "<tr id=table-row-"+student.id+">";
+		let tableBody = $('#enrollments-table-body');
+		let row = "<tr id=enrollments-row-"+student.id+">";
 		
 		row += "<td>"+student.identification_number+"</td>";
 		row += "<td>"+student.names+"</td>";
@@ -249,7 +308,7 @@
 	}
 
 	function removeStudent(student) {
-		let row = $('#table-row-'+student.id);
+		let row = $('#enrollments-row-'+student.id);
 		row.remove();
 	}
 
@@ -295,9 +354,21 @@
 		})
 	}
 
+	function mark_attendance(elem) {
+		const csrftoken = getCookie('csrftoken');
+
+		let date = $(elem).data('date');
+		let enrollment = $(elem).data('enrolled');
+
+		alert(enrollment);
+	}
+
 	var i = 0;
 
 	$(document).ready(function(e) {
+		// DataTables
+		let enrollmentsTable = $('#enrollments-table').DataTable();
+
 		/* Formularios para buscar y registrar estudiante en un curso */
 		let studentRegisterChecked = $('#student_register_checkbox').is(':checked');
 		let studentSearchSection = $('#student_search_section');
@@ -381,6 +452,50 @@
 
 		$("#link-notes").on("click", function(e) {
 			e.preventDefault();
+		})
+
+		$('#save-note').on("click", function(e) {
+			e.preventDefault();
+			const csrftoken = getCookie('csrftoken');
+			const enrollment_student_id = $('#enrollment_id').val();
+
+			alert(enrollment_student_id);
+
+			let form = new FormData();
+			form.append('note', $('#note').val());
+			form.append('enrollment_id', enrollment_student_id);
+
+			fetch("{% url 'students:students-enrollments-notes' enrollment_id %}", {
+				method: 'POST',
+				body: form,
+				headers: { "X-CSRFToken": csrftoken },
+			})
+			.then(function(response) {
+				if (response.ok) {
+					return response.json();
+				} else {
+					return response.json();
+				}
+			})
+			.then(function(response) {
+				if (response.status == 201) {
+					let exam = response.data;
+					let enrollment = exam.enrollment;
+					let elem = $('#notes-row-'+enrollment.id);
+					elem.empty()
+
+					let td = "<td>"+enrollment.student.identification_number+"</td>";
+					td += "<td>"+enrollment.student.names+" "+enrollment.student.surnames+"</td>";
+					for(var i=0; i < enrollment.notes.length; i++) {
+						td += "<td>"+enrollment.notes[i]+"</td>";
+					}
+					td += "<td>"+enrollment.final_note+"</td>";
+					elem.append(td);
+					alert(response.message);
+				} else {
+					alert(response.message);
+				}
+			})
 		})
 	});
 
