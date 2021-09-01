@@ -1,4 +1,5 @@
 from json import dumps, loads
+from uuid import uuid4
 
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -12,8 +13,19 @@ from users.utils import random_password_generate
 
 class TeachersView(View):
 
+	template_name = 'teachers/index.html'
 	form = TeacherCreateForm
 
+	def get(self, request):
+		context = {}
+
+		try:
+			teachers = Teacher.objects.all()
+			context['teachers'] = teachers
+		except:
+			context['teachers'] = []
+
+		return render(request, self.template_name, context)
 
 	def post(self, request):
 		context = {}
@@ -24,6 +36,7 @@ class TeachersView(View):
 			if form.is_valid():
 				form = form.cleaned_data
 				teacher = Teacher(**form)
+				teacher.qrcode = uuid4().hex
 				teacher.save()
 
 				# Crear cuenta de profesor

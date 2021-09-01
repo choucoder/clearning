@@ -7,4 +7,4 @@ class TeacherCreateForm(forms.Form):
 	names = forms.CharField(max_length=32)
 	surnames = forms.CharField(max_length=32)
 	email = forms.EmailField()
-	phone = form.CharField(default="")
+	phone = forms.CharField()

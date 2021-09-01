@@ -4,6 +4,7 @@ from uuid import uuid4
 from django.db import models
 
 from ..core.models import BaseModel
+from ..core.utils import get_default_uuid
 from users.models import UserAccount
 
 
@@ -11,6 +12,7 @@ class Teacher(BaseModel):
 
 	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 	identification_number = models.CharField(max_length=16, unique=True)
+	qrcode = models.CharField(max_length=36, unique=True, default=get_default_uuid)
 	names = models.CharField(max_length=32)
 	surnames = models.CharField(max_length=32)
 	email = models.EmailField()

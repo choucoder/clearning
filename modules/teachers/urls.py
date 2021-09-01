@@ -6,5 +6,6 @@ from . import views
 app_name = 'teachers'
 
 urlpatterns = [
-	path('<str:teacher_id>/', views.TeacherView.as_view(), name='single')
+	path('', views.TeachersView.as_view(), name='list'),
+	path('<str:teacher_id>/', views.TeacherView.as_view(), name='single'),
 ]
