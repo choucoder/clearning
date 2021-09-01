@@ -4,12 +4,11 @@ from uuid import uuid4
 
 from django.db import models
 from django.utils import timezone
-from modules.courses.models import Enrollment
 
 
 class Attendance(models.Model):
 	id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
-	enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE)
+	enrollment = models.ForeignKey('courses.Enrollment', on_delete=models.CASCADE)
 	date = models.DateField(default=timezone.now)
 
 	def __str__(self):
