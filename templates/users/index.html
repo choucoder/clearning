@@ -1,0 +1,76 @@
+{% extends '../base.html' %}
+
+{% load static %}
+
+{% block title %}Inicio{% endblock %}
+
+{% block pagetitle %}Usuarios{% endblock %}
+
+{% block content %}
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h5 class="h5 mb-0 text-gray-800">Todos los usuarios registrados</h5>
+</div>
+
+<div class="card shadow mb-4">
+    <div class="card-header py-3">
+	</div>
+	<div class="card-body">
+        <div class="tab-content">
+	        <div class="tab-pane fade show active">
+	        	<div class="table-responsive">
+		            <table class="table table-bordered" id="users-table" width="100%" cellspacing="0">
+		                <thead>
+		                    <tr>
+		                        <th>Nombre</th>
+		                        <th>Apellido</th>
+		                        <th>Correo</th>
+		                        <th>Usuario</th>
+		                        <th>Tipo de usuario</th>
+		                        <th>Acciones</th>
+		                    </tr>
+		                </thead>
+		                <tbody id="users-table-body">
+		                	{% for user in users %}
+		                		<tr id="table-row-{{ user.id }}">
+		                			<td>{{ user.first_name }}</td>
+		                			<td>{{ user.last_name }}</td>
+		                			<td>{{ user.email }}</td>
+		                			<td>{{ user.username }}</td>
+		                			<td>{{ user.get_user_type_display }}</td>
+		                			<td><a href="#" class="danger" onclick="">Eliminar</a></td>
+		                		</tr>
+		                	{% endfor %}
+		                </tbody>
+		            </table>
+	        	</div>
+	        </div>
+    	</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block additionaljs %}
+{% csrf_token %}
+<script type="text/javascript" charset="utf-8" async defer>
+
+	function getCookie(name) {
+	    let cookieValue = null;
+	    if (document.cookie && document.cookie !== '') {
+	        const cookies = document.cookie.split(';');
+	        for (let i = 0; i < cookies.length; i++) {
+	            const cookie = cookies[i].trim();
+	            // Does this cookie string begin with the name we want?
+	            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+	                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+	                break;
+	            }
+	        }
+	    }
+	    return cookieValue;
+	}
+
+	$(document).ready(function(){
+		$('#users-table').DataTable();
+	})
+</script>
+{% endblock %}
