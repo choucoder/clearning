@@ -135,7 +135,8 @@ class CourseOpeningView(View):
 								course.categories.add(category)
 
 						course.save()
-						course.reload()
+						#print(f"Curso: {course}")
+						#course.reload()
 
 				if form['teacher_register_checkbox'] != 'on':
 					teacher = Teacher.objects.get(id=form['teacher_name_search'])
