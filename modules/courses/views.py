@@ -163,6 +163,7 @@ class CourseOpeningView(View):
 						teacher.surnames = form['teacher_surnames']
 						teacher.phone = form['teacher_phone']
 						teacher.save()
+						teacher.save_credential()
 
 						users = UserAccount.objects.filter(email=email)
 						email = email if not users else None
@@ -282,6 +283,7 @@ class CourseStudentsView(View):
 						student.surnames = form['student_surnames'].upper()
 						student.email = form['student_email']
 						student.phone = form['student_phone']
+						student.save_credential()
 						student.save()
 				else:
 					student_id = form['student_name_search']
