@@ -71,6 +71,42 @@ class CourseOpening(BaseModel):
 			status=self.get_status_display()
 		)
 
+	@classmethod
+	def mark_courses_as_start(cls):
+		openings = cls.objects.filter(status=cls.ENROLLED)
+		current_date = datetime.today().date()
+
+		for opening in openings:
+			if opening.start_date <= current_date:
+				opening.status = cls.IN_PROGRESS
+				opening.save()
+
+
+	@classmethod
+	def mark_courses_as_complete(cls):
+		openings = cls.objects.filter(status=cls.IN_PROGRESS)
+		current_date = datetime.today().date()
+
+		for opening in openings:
+			if opening.end_date >= current_date:
+				opening.status = cls.FINALIZED
+				opening.save()
+
+			else:
+				duration = opening.end_date - opening.start_date
+				elapsed = current_date - opening.start_date
+
+				if (duration.days - elapsed.days) < 0:
+					opening.status = cls.FINALIZED
+					opening.save()
+
+	@classmethod
+	def update_courses_status(cls, **kwargs):
+		cls.mark_courses_as_start()
+		cls.mark_courses_as_complete()
+		return cls.objects.filter(**kwargs)
+
+
 	def get_school_days(self):
 		schedules = Schedule.objects.filter(opening=self)
 		school_days = []

@@ -262,6 +262,11 @@ class CourseStudentsView(View):
 		try:
 			opening = CourseOpening.objects.get(id=enrollment_id)
 
+			if opening.status == CourseOpening.FINALIZED:
+				context['status'] = 400
+				context['message'] = "No puedes inscribir un alumno al curso porque este ya ha finalizado."
+				return JsonResponse(context)
+
 			form = self.form(request.POST)
 
 			if form.is_valid():
@@ -328,6 +333,12 @@ class CourseStudentDeleteView(View):
 
 		try:
 			opening = CourseOpening.objects.get(id=enrollment_id)
+			
+			if opening.status == CourseOpening.FINALIZED:
+				context['status'] = 400
+				context['message'] = "No puedes eliminar un alumno del curso porque este ya ha finalizado."
+				return JsonResponse(context)
+
 			form = EnrollmentDeleteForm(request.POST)
 
 			print(f"Formulario: {form}")
@@ -371,8 +382,8 @@ class CourseSchedulesView(View):
 
 		try:
 			opening = CourseOpening.objects.get(id=enrollment_id)
-			schedules = Schedule.objects.filter(opening=opening)
 
+			schedules = Schedule.objects.filter(opening=opening)
 			_schedules = []
 
 			for schedule in schedules:
@@ -403,6 +414,11 @@ class CourseSchedulesView(View):
 			if form.is_valid():
 				form = form.cleaned_data
 				opening = CourseOpening.objects.get(id=enrollment_id)
+
+				if opening.status == CourseOpening.FINALIZED:
+					context['status'] = 400
+					context['message'] = "No se puede modificar los horarios porque curso ya ha finalizado"
+					return JsonResponse(context)
 				
 				day = Day.objects.get(id=form['day'])
 				entry_time = form['entry_time']
@@ -464,6 +480,12 @@ class CourseScheduleDeleteView(View):
 			if form.is_valid():
 				form = form.cleaned_data
 				opening = CourseOpening.objects.get(id=enrollment_id)
+
+				if opening.status == CourseOpening.FINALIZED:
+					context['status'] = 400
+					context['message'] = "No se puede modificar los horarios porque curso ya ha finalizado"
+					return JsonResponse(context)
+					
 				schedule = Schedule.objects.get(opening=opening, id=form['schedule_id'])
 				schedule.delete()
 

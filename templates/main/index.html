@@ -49,7 +49,7 @@
                     			<td>{{ opening.get_status_display }}</td>
                     			<td>
                     				<a href="{% url 'courses:students' opening.id %}" class="info">Matricula</a>
-									<a href="javascript:void(0);" onclick="openScheduleModal('{{ opening.id }}')" class="info">Horarios</a>
+									<a href="javascript:void(0);" onclick="openScheduleModal('{{ opening.id }}', '{{ opening.status }}')" class="info">Horarios</a>
                     			</td>
                     		</tr>
                     	{% endfor %}
@@ -334,11 +334,17 @@
 		})
 	}
 
-	function openScheduleModal(opening_id) {
+	function openScheduleModal(opening_id, status) {
 		const csrftoken = getCookie('csrftoken');
 		const scheduleModal = $('#EditarHorarioCursoModal');
+		const saveScheduleButton = $("#saveSchedule");
+
 		const select = $('#day');
 		const body = $('#table-schedule-body');
+
+		if (status === '3') {
+			saveScheduleButton.prop('disabled', true);
+		}
 
 		body.empty()
 
@@ -367,7 +373,12 @@
 					let elem = "<tr id='"+schedule.id+"'>";
 					elem += "<td>"+schedule.day.es_name+"</td>";
 					elem += "<td>"+schedule.entry_time+" - "+schedule.departure_time+"</td>";
-					elem += "<td><a href='javascript:void(0);' class='btn btn-danger btn-circle btn-sm' onclick='deleteSchedule(this);' data-schedule='"+schedule.id+"' data-opening='"+opening_id+"'><i class='fa fa-trash'></i></a></td>";
+					
+					if (status === "3")
+						elem += "<td></td>";
+					else
+						elem += "<td><a href='javascript:void(0);' class='btn btn-danger btn-circle btn-sm' onclick='deleteSchedule(this);' data-schedule='"+schedule.id+"' data-opening='"+opening_id+"'><i class='fa fa-trash'></i></a></td>";
+						
 					elem += "</tr>";
 					body.append(elem);
 				})

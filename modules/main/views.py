@@ -18,14 +18,15 @@ class HomeView(LoginRequiredMixin, View):
 		account = request.user
 
 		if account.user_type in (UserAccount.SUBSCRIPTION, UserAccount.ADMIN):
-			courses = CourseOpening.objects.all()
+			courses = CourseOpening.update_courses_status()
+		
 		elif account.user_type == UserAccount.TEACHER:
 			teacher = Teacher.objects.filter(account=account).first()
-			courses = CourseOpening.objects.filter(teacher=teacher)
+			courses = CourseOpening.update_courses_status(teacher=teacher)
 		else:
 			# Asegurar que se traiga los cursos en los que se encuentra
 			# ese estudiante
-			courses = CourseOpening.objects.filter()
+			courses = CourseOpening.update_courses_status()
 
 		context['categories'] = Category.objects.all()
 		context['courses'] = Course.objects.all()
