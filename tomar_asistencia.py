@@ -37,14 +37,8 @@ class UIMarcajeAsistencia(tk.Frame):
 
     def __init__(self, parent=None):
         tk.Frame.__init__(self, parent)
-        self.curso = Course.objects.filter().first()
-        
-        if not self.curso:
-            print("No existe el curso de Programación en Python")
-            sys.exit(-1)
-
         # Obtener apertura del curso
-        self.opening = CourseOpening.objects.filter(course=self.curso).first()
+        self.opening = self.seleccionar_curso()
 
         self.parent = parent
         self.camara = VideoStream(usePiCamera=False).start()
@@ -58,13 +52,26 @@ class UIMarcajeAsistencia(tk.Frame):
         self.init_ui()
 
 
+    def seleccionar_curso(self):
+        openings = CourseOpening.objects.all()
+
+        for i, opening in enumerate(openings):
+            if opening.status != CourseOpening.FINALIZED:
+                print("%d %s" % ((i + 1), opening.course.name))
+        
+        opcion = int(input("Ingrese el curso que desea monitorear: "))
+        opening = openings[opcion - 1]
+
+        return opening
+
+
     def init_ui(self):
         titulo_qr = tk.Label(
             self.parent, text="Presente su carnet para escanear el codigo QR\n y poder ingresar al aula",
             font=("Verdana", 12))
 
         titulo_curso = tk.Label(
-            self.parent, text="Curso de \nIntroducción a la Programación \nen Python",
+            self.parent, text="Bienvenido\nal curso de\n" + self.opening.course.name,
             font=("Verdana", 20, "bold"), height=18, width=16)
 
         titulo_qr.config(bg="#FFFFFF")
