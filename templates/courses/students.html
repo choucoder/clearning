@@ -41,6 +41,7 @@
 		                        <th>Apellido</th>
 		                        <th>Correo</th>
 		                        <th>Telefono</th>
+								<th>Credencial</th>
 		                        <th>Acciones</th>
 		                    </tr>
 		                </thead>
@@ -52,6 +53,9 @@
 		                			<td>{{ student.surnames }}</td>
 		                			<td>{{ student.email }}</td>
 		                			<td>{{ student.phone }}</td>
+									<td>
+										<img src="/media/images/{{ student.qrcode_path }}" width="90" height="90" />
+									</td>
 		                			<td><a href="#" class="danger" onclick="deleteStudent('{{student.id}}')">Eliminar</a></td>
 		                		</tr>
 		                	{% endfor %}

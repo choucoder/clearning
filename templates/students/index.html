@@ -28,6 +28,7 @@
                 <th>Apellidos</th>
                 <th>Correo electronico</th>
                 <th>Teléfono</th>
+                <th>Credencial</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -39,6 +40,9 @@
                 <td>{{ student.surnames }}</td>
                 <td>{{ student.email }}</td>
                 <td>{{ student.phone }}</td>
+                <td>
+                  <img src="/media/images/{{ student.qrcode_path }}" width="90" height="90" />
+                </td>
                 <td>
                   <a href="javascript:void(0)" class="info" onclick="">
                     Editar
