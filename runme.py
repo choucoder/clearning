@@ -5,6 +5,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', "clearning.settings")
 django.setup()
 
 from modules.core.models import Day
+from modules.students.models import Student
+from modules.teachers.models import Teacher
 
 
 days = [
@@ -25,3 +27,12 @@ for number, es_name, en_name in days:
 
 	except Exception as e:
 		print(f"El dia {es_name} ya esta registrado -> {e}")
+
+
+for student in Student.objects.all():
+	student.save_credential()
+
+for teacher in Teacher.objects.all():
+	teacher.save_credential()
+
+print("Credenciales de estudiantes y profesores han sido guardadas")

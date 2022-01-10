@@ -56,7 +56,9 @@
     </div>
   </div>
 </div>
-{% endblock %} {% block additionaljs %} {% csrf_token %}
+{% endblock %}
+{% block additionaljs %}
+{% csrf_token %}
 <script type="text/javascript" charset="utf-8" async defer>
   function getCookie(name) {
     let cookieValue = null;
