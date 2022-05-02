@@ -77,7 +77,7 @@ class CourseOpening(BaseModel):
 		current_date = datetime.today().date()
 
 		for opening in openings:
-			if opening.start_date <= current_date:
+			if current_date >= opening.start_date:
 				opening.status = cls.IN_PROGRESS
 				opening.save()
 

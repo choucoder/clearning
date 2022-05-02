@@ -28,6 +28,8 @@ class HomeView(LoginRequiredMixin, View):
 			# ese estudiante
 			courses = CourseOpening.update_courses_status()
 
+		courses = courses.order_by('status', 'start_date')
+
 		context['categories'] = Category.objects.all()
 		context['courses'] = Course.objects.all()
 		context['teachers'] = Teacher.objects.all()
